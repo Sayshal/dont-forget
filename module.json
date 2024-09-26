@@ -1,0 +1,20 @@
+{
+  "id": "dont-forget",
+  "title": "Don't Forget!",
+  "version": "0.0.1",
+  "compatibility": {
+    "minimum": "12.331",
+    "verified": "12.331",
+    "maximum": "12.999"
+  },
+  "description": "A simple foundry module to allow GMs to set reminders for players to be displayed in chat or a popup during certain events: combat start, turn start, long rest completion, and more!",
+  "authors": [
+    {
+      "name": "Tyler",
+      "url": "https://github.com/Sayshal",
+      "discord": "Tyler",
+      "flags": {}
+    }
+  ],
+  "url": "https://github.com/Sayshal/dont-forget"
+}
