@@ -1,5 +1,8 @@
 {
   "DONT-FORGET": {
-    
+    "button-title": "Open Reminders",
+    "add-reminder": "Add Reminder",
+    "delete-reminder": "Delete Reminder",
+    "mark-done": "Mark Done"
   }
 }

@@ -1,6 +1,8 @@
 class Reminder {
   static ID = "dont-forget";
 
+  static TITLE = "Don't Forget!";
+
   static FLAGS = {
     REMINDERS: "reminders",
   };
@@ -9,6 +11,21 @@ class Reminder {
     DONTFORGET: `modules/${this.ID}/templates/dont-forget.hbs`,
   };
 }
+
+Hooks.on('renderPlayerList', (playerList, html) => {
+  //find the element which has our logged in user's id
+  const loggedInUserListItem = html.find(`[data-user-id="${game.userId}"]`)
+  //create localized tooltip
+  const tooltip = game.i18n.localize('DONT-FORGET.button-title');
+  //insert a button at the end of this element
+  loggedInUserListItem.append(
+    `<button type='button' class='${Reminder.ID}-icon-button flex0' title='${tooltip}'><i class='fas fa-note-sticky'></i></button>`
+  );
+
+  html.on('click', `.${Reminder.ID}-icon-button`, (event) => {
+    console.log(`${Reminder.TITLE}: Button Clicked!`);
+  });
+});
 
 /**
  * A single reminder
@@ -72,7 +89,7 @@ class ReminderData {
     //Update the database with the updated reminder list
     return game.users.get(relevantReminder.userId)?.setFlag(Reminder.ID, Reminder.FLAGS.REMINDERS, update);
   }
-  
+
   //update multiple reminders on a user
   static updateUserReminders(userId, updateData){
     return game.users.get(userId)?.setFlag(Reminder.ID, Reminder.FLAGS.REMINDERS, updateData);
@@ -89,5 +106,28 @@ class ReminderData {
 
     //update the database with the updated reminder list
     return game.users.get(relevantReminder.userId)?.setFlag(Reminder.ID, Reminder.FLAGS.REMINDERS, keyDeletion);
+  }
+}
+
+class ReminderConfig extends FormApplication {
+  static get defaultOptions() {
+    const defaults = super.defaultOptions;
+
+    const overrides = {
+      height: 'auto',
+      id: `${Reminder.ID}`,
+      template: Reminder.TEMPLATES.DONTFORGET,
+      title: `${Reminder.TITLE}`,
+      userId: game.userId,
+    };
+
+    const mergedOptions = foundry.utils.mergeObject(defaults, overrides);
+
+    return mergedOptions;
+  }
+  getData(options) {
+    return {
+      reminders: ReminderData.getRemindersForUser(options.userId)
+    }
   }
 }

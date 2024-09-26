@@ -1,0 +1,17 @@
+<form>
+  <ul class="dont-forget flexcol">
+    {{#each reminders}}
+    <li class="flexrow" data-reminder-id="{{id}}">
+      <input type="checkbox" name="{{id}}.isDone" title="{{localize "DONT-FORGET.mark-done"}}" data-dtype="Boolean" {{checked isDone}} />
+
+      <input type="text" value="{{label}}" name="{{id}}.label" data-dtype="String" />
+
+      <button type="button" title="{{localize "DONT-FORGET.delete-reminder"}}" data-action="delete" class="flex0 dont-forget-icon-button" style="color:black">
+        <i class="fas fa-trash"></i>
+      </button>
+    </li>
+    {{/each}}
+  </ul>
+
+  <button type="button" data-action="create"><i class="fas fa-plus"></i>{{localize "DONT-FORGET.add-reminder"}}</button>
+</form>
