@@ -10,7 +10,15 @@ class Reminder {
   static TEMPLATES = {
     DONTFORGET: `modules/${this.ID}/templates/dont-forget.hbs`,
   };
+
+  static initialize() {
+    this.reminderConfig = new ReminderConfig();
+  }
 }
+
+Hooks.on('init', () => {
+  Reminder.initialize();
+})
 
 Hooks.on('renderPlayerList', (playerList, html) => {
   //find the element which has our logged in user's id
@@ -23,7 +31,8 @@ Hooks.on('renderPlayerList', (playerList, html) => {
   );
 
   html.on('click', `.${Reminder.ID}-icon-button`, (event) => {
-    console.log(`${Reminder.TITLE}: Button Clicked!`);
+    const userId = $(event.currentTarget).parents('[data-user-id]')?.data()?.userId;
+    Reminder.reminderConfig.render(true, {userId});
   });
 });
 
@@ -119,6 +128,9 @@ class ReminderConfig extends FormApplication {
       template: Reminder.TEMPLATES.DONTFORGET,
       title: `${Reminder.TITLE}`,
       userId: game.userId,
+      closeOnSubmit: false, // do not close when submitted
+      submitOnChange: true, // submit when any input changes
+      submitOnClose: true, // submit when closed
     };
 
     const mergedOptions = foundry.utils.mergeObject(defaults, overrides);
@@ -129,5 +141,25 @@ class ReminderConfig extends FormApplication {
     return {
       reminders: ReminderData.getRemindersForUser(options.userId)
     }
+  }
+
+  async _updateObject(event, formData) {
+    const expandedData = foundry.utils.expandObject(formData);
+    //console.log(`${Reminder.TITLE} Saving: `, {formData});
+    await ReminderData.updateUserReminders(this.options.userId, expandedData);
+
+    this.render();
+  }
+
+  async _handleButtonClick(event) {
+    const clickedElement = $(event.currentTarget);
+    const action = clickedElement.data().action;
+    const reminderId = clickedElement.parents('[data-reminder-id]')?.data().reminderId;
+
+    console.log(`${Reminder.TITLE} Button Click: `, {action, reminderId});
+  }
+
+  activateListeners(html) {
+    html.on('click', "[data-action]", this._handleButtonClick);
   }
 }
