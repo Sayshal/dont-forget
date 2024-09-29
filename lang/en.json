@@ -4,6 +4,7 @@
     "add-reminder": "Add Reminder",
     "delete-reminder": "Delete Reminder",
     "mark-done": "Mark Done",
+    "window-title": "Reminder Menu",
     "settings": {
       "inject-button": {
         "Name": "Display Reminder button?",

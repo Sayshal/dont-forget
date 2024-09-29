@@ -1,16 +1,11 @@
 class Reminder {
   static ID = "dont-forget";
-
   static TITLE = "Don't Forget!";
-
-  static FLAGS = {
-    REMINDERS: "reminders",
-  };
-
+  static FLAGS = { REMINDERS: "reminders" };
   static TEMPLATES = {
     DONTFORGET: `modules/${this.ID}/templates/dont-forget.hbs`,
   };
-
+  static SETTINGS = { INJECT_BUTTON: "inject-button" };
   static initialize() {
     this.reminderConfig = new ReminderConfig();
     game.settings.register(this.ID, this.SETTINGS.INJECT_BUTTON, {
@@ -23,17 +18,30 @@ class Reminder {
       onChange: () => ui.players.render(),
     });
   }
-
-  static SETTINGS = {
-    INJECT_BUTTON: "inject-button",
-  };
 }
 
-Hooks.on("init", () => {
+Hooks.once("init", () => {
   Reminder.initialize();
 });
-
-Hooks.on("renderPlayerList", (playerList, html) => {
+Hooks.once("changeSidebarTab", () => {
+  if (!game.settings.get(Reminder.ID, Reminder.SETTINGS.INJECT_BUTTON)) {
+    //Hide everything if the setting is disabled.
+    return;
+  }
+  const journalFooter = $('section[class*="journal-sidebar"]').find(
+    'footer[class*="directory-footer"]'
+  );
+  console.log("FOOTER: " + journalFooter);
+  const tooltip = game.i18n.localize("DONT-FORGET.button-title");
+  journalFooter.append(
+    `<button type='button' class='${Reminder.ID}-icon-button flex0' title='${tooltip}'><i class='fas fa-note-sticky'></i> ${Reminder.TITLE}</button>`
+  );
+  const userId = game.userId;
+  $(document).on("click", `.${Reminder.ID}-icon-button`, (event) => {
+    Reminder.reminderConfig.render(true, { userId });
+  });
+});
+/* Hooks.on("renderPlayerList", (playerList, html) => {
   if (!game.settings.get(Reminder.ID, Reminder.SETTINGS.INJECT_BUTTON)) {
     //Hide everything if the setting is disabled.
 
@@ -54,7 +62,7 @@ Hooks.on("renderPlayerList", (playerList, html) => {
       ?.data()?.userId;
     Reminder.reminderConfig.render(true, { userId });
   });
-});
+}); */
 
 /**
  * A single reminder
@@ -146,7 +154,7 @@ class ReminderData {
       ?.setFlag(Reminder.ID, Reminder.FLAGS.REMINDERS, keyDeletion);
   }
 }
-
+/* Time to go ApplicationV2! */
 class ReminderConfig extends FormApplication {
   static get defaultOptions() {
     const defaults = super.defaultOptions;
@@ -223,3 +231,94 @@ class ReminderConfig extends FormApplication {
     html.on("click", "[data-action]", this._handleButtonClick.bind(this));
   }
 }
+/* const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+
+class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
+  static DEFAULT_OPTIONS = {
+    id: `${Reminder.ID}`,
+    tag: "form",
+    form: {
+      handler: ReminderConfig._updateObject,
+      closeOnSubmit: false, // do not close when submitted
+      submitOnChange: true, // submit when any input changes
+      submitOnClose: true, // submit when closed
+    },
+    actions: {
+      click: ReminderConfig._click,
+    },
+    position: {
+      height: "auto",
+      width: "30%",
+    },
+    window: {
+      icon: "fas fa-note-sticky",
+      title: `${Reminder.TITLE} : ${game.i18n.localize(
+        "DONT-FORGET.window-title"
+      )}`,
+      resizable: true,
+    },
+    userId: game.userId,
+  };
+  get title() {
+    return `${game.i18n.localize(this.options.window.title)}`;
+  }
+  static PARTS = {
+    form: {
+      template: "Reminder.TEMPLATES.DONTFORGET",
+    },
+  };
+
+  _prepareContext(options) {
+    return {
+      reminders: ReminderData.getRemindersForUser(options.userId),
+    };
+  }
+
+  async _updateObject(event, formData) {
+    const expandedData = foundry.utils.expandObject(formData);
+    //console.log(`${Reminder.TITLE} Saving: `, {formData});
+    await ReminderData.updateUserReminders(this.options.userId, expandedData);
+
+    this.render();
+  }
+  static async _click(event) {
+    const clickedElement = $(event.currentTarget);
+    const action = clickedElement.data().action;
+    const reminderID = clickedElement
+      .parents("[data-reminder-id]")
+      ?.data()?.reminderId;
+
+    console.log(`${Reminder.TITLE} Button Click: `, {
+      this: this,
+      action,
+      reminderID,
+    });
+
+    switch (action) {
+      case "create": {
+        await ReminderData.createReminder(this.options.userId);
+        this.render();
+        break;
+      }
+
+      case "delete": {
+        const confirmed = await Dialog.confirm({
+          title: game.i18n.localize("DONT-FORGET.confirms.deleteConfirm.Title"),
+          content: game.i18n.localize(
+            "DONT-FORGET.confirms.deleteConfirm.Content"
+          ),
+        });
+        if (confirmed) {
+          await ReminderData.deleteReminder(reminderID);
+          this.render();
+        }
+        break;
+      }
+      default:
+        console.log("Invalid action detected: " + action);
+    }
+  }
+
+  _onRender(context, options) {}
+}
+ */
