@@ -3,6 +3,18 @@
     "button-title": "Open Reminders",
     "add-reminder": "Add Reminder",
     "delete-reminder": "Delete Reminder",
-    "mark-done": "Mark Done"
+    "mark-done": "Mark Done",
+    "settings": {
+      "inject-button": {
+        "Name": "Display Reminder button?",
+        "Hint": "Controls whether or not Reminders can be opened from the player list."
+      }
+    },
+    "confirms": {
+      "deleteConfirm": {
+        "Title": "Delete Reminder?",
+        "Content": "Are you sure you want to delete this Reminder? This action cannot be undone."
+      }
+    }
   }
 }
