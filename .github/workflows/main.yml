@@ -82,14 +82,14 @@ jobs:
             }
           }'
 
-      - name: Post to Discord
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_FVTT_WEBHOOK }}
-        run: |
-          curl -H "Content-Type: application/json" \
-          -d '{
-          "embeds": [{
-            "title": "Don't Forget! Release: ${{ steps.get-version.outputs.version }}",
-            "description": "${{ steps.format-release-notes-discord.outputs.release-notes-discord }}\n\nCheck it out through the Foundry package manager or the link below:\n<https://github.com/Sayshal/dont-forget/releases/tag/${{ steps.get-version.outputs.version }}>",
-          }]
-          }' $DISCORD_WEBHOOK
+      # - name: Post to Discord
+      #   env:
+      #     DISCORD_WEBHOOK: ${{ secrets.DISCORD_FVTT_WEBHOOK }}
+      #   run: |
+      #     curl -H "Content-Type: application/json" \
+      #     -d '{
+      #     "embeds": [{
+      #       "title": "Don't Forget! Release: ${{ steps.get-version.outputs.version }}",
+      #       "description": "${{ steps.format-release-notes-discord.outputs.release-notes-discord }}\n\nCheck it out through the Foundry package manager or the link below:\n<https://github.com/Sayshal/dont-forget/releases/tag/${{ steps.get-version.outputs.version }}>",
+      #     }]
+      #     }' $DISCORD_WEBHOOK
