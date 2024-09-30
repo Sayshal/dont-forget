@@ -1,31 +1,9 @@
-.dont-forget {
-  padding: 0;
-  margin-top: 0;
-  gap: 0em;
-  color: white;
-}
-
-.dont-forget > li {
-  align-items: center;
-  gap: 0.5em;
-}
-
-.dont-forget-icon-button {
-}
-
-.dont-forget-icon-button > i {
-}
-
-.dont-forget-icon-button:hover,
-.dont-forget-icon-button:focus {
-}
-
 .dont-forget-journal-icon-button {
   line-height: normal;
   border: 0;
   align-self: center;
-  height: auto; /* Height adjusts based on content */
-  display: inline-block; /* Shrinks the button to fit the content */
+  height: auto;
+  display: inline-block;
 }
 
 .dont-forget-journal-icon-button > i {
@@ -36,4 +14,55 @@
 .dont-forget-journal-icon-button:focus {
   box-shadow: none;
   text-shadow: 0 0 5px red;
+}
+
+/* Ensure the dont-forget list has no unwanted padding or margin */
+.dont-forget {
+  list-style: none;
+  padding: 0; /* No padding on the list */
+  margin: 0; /* No margin on the list */
+  width: 30vw; /* Default to 30% of the window width */
+  max-width: 500px; /* Optional: Set a max width to prevent excessive expansion */
+}
+
+/* Each row inside the 'dont-forget' list */
+.dont-forget-list-item {
+  align-content: center;
+  display: grid;
+  width: 90%;
+  grid-template-columns: auto 1fr auto; /* Checkbox, input, delete button */
+  padding: 5px 0; /* Padding around each row */
+  gap: 10px; /* Space between the elements */
+  box-sizing: border-box; /* Include padding and borders in total width */
+}
+
+/* Checkbox: Natural size with no extra margins */
+.dont-forget-checkbox {
+  align-content: center;
+  padding: 2px; /* Padding around the checkbox */
+  margin: 0; /* Ensure no margins pushing it to the right */
+  box-sizing: border-box; /* Include padding in size */
+}
+
+/* Input field: Stretches to take up remaining space */
+.dont-forget-input {
+  align-content: center;
+  width: 100%; /* Full width within its grid cell */
+  padding: 5px; /* Padding inside the input */
+  box-sizing: border-box; /* Include padding in size */
+}
+
+/* Delete button: Natural size */
+.dont-forget-delete {
+  align-content: center;
+  background: transparent !important;
+  border: none !important;
+  display: flex;
+  padding: 2px; /* Padding around the delete button */
+  margin: 0; /* Ensure no extra margins */
+  box-sizing: border-box; /* Include padding in size */
+}
+.dont-forget-create {
+  align-content: center;
+  width: 90%;
 }

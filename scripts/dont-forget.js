@@ -3,7 +3,7 @@ class Reminder {
   static TITLE = "Don't Forget!";
   static FLAGS = { REMINDERS: "reminders" };
   static TEMPLATES = {
-    DONTFORGET: `modules/${this.ID}/templates/dont-forget.hbs`,
+    DONTFORGETPOPUP: `modules/${this.ID}/templates/dont-forget-popup.hbs`,
   };
   static SETTINGS = { INJECT_BUTTON: "inject-button" };
   static initialize() {
@@ -159,7 +159,7 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
       icon: "fas fa-note-sticky",
       resizable: true,
     },
-    classes: [`${Reminder.ID}-popup`],
+    classes: [`${Reminder.ID}`/*, `${Reminder.ID}-popup`, `${Reminder.ID}-popup-input`, `${Reminder.ID}-popup-delete`, `${Reminder.ID}-popup-checkbox`*/],
   };
   get title() {
     return `${Reminder.TITLE} ${game.i18n.localize(
@@ -168,7 +168,7 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
   }
   static PARTS = {
     form: {
-      template: Reminder.TEMPLATES.DONTFORGET,
+      template: Reminder.TEMPLATES.DONTFORGETPOPUP,
     },
   };
   _prepareContext(options) {
@@ -181,9 +181,9 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     };
   }
   static async formHandler(event, form, formData) {
-    const expandedData = foundry.utils.expandObject(formData);
+    //const expandedData = foundry.utils.expandObject(formData.object);
     //console.log(`${Reminder.TITLE} Saving: `, { expandedData });
-    await ReminderData.updateUserReminders(game.userId, expandedData);
+    await ReminderData.updateUserReminders(game.userId, formData.object);
   }
   static async create(event, target) {
     console.log("CREATE: " + this);
