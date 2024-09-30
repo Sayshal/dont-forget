@@ -63,6 +63,6 @@
   box-sizing: border-box; /* Include padding in size */
 }
 .dont-forget-create {
-  align-content: center;
+  align-content: center !important;
   width: 90%;
 }

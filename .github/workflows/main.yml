@@ -7,6 +7,10 @@ on:
     paths-ignore:
       - 'README.md'
       - 'CHANGELOG.md'
+      - 'LICENSE'
+      - 'TODO.md'
+      - '.gitattributes'
+      - '.gitignore'
 
 jobs:
   build:
@@ -85,7 +89,7 @@ jobs:
           curl -H "Content-Type: application/json" \
           -d '{
           "embeds": [{
-            "title": "Tyler'"'"'s Premade Kit Release: ${{ steps.get-version.outputs.version }}",
+            "title": "Don't Forget! Release: ${{ steps.get-version.outputs.version }}",
             "description": "${{ steps.format-release-notes-discord.outputs.release-notes-discord }}\n\nCheck it out through the Foundry package manager or the link below:\n<https://github.com/Sayshal/dont-forget/releases/tag/${{ steps.get-version.outputs.version }}>",
           }]
           }' $DISCORD_WEBHOOK
