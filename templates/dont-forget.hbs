@@ -1,11 +1,13 @@
-<form>
+<div class="dont-forget" id="dont-forget">
   <ul class="dont-forget flexcol">
     {{#each reminders}}
       <li class="flexrow" data-reminder-id="{{id}}">
         <input
           type="checkbox"
           name="{{id}}.isDone"
+          id="{{id}}.isDone"
           title="{{localize 'DONT-FORGET.mark-done'}}"
+          class="dont-forget-popup checkbox"
           data-dtype="Boolean"
           {{checked isDone}}
         />
@@ -14,7 +16,9 @@
           type="text"
           value="{{label}}"
           name="{{id}}.label"
+          id="{{id}}.label"
           data-dtype="String"
+          class="dont-forget-popup input"
         />
 
         <button
@@ -34,4 +38,4 @@
     data-action="create"
     class="flex0 dont-forget-icon-button create"
   ><i class="fas fa-plus"></i>{{localize "DONT-FORGET.add-reminder"}}</button>
-</form>
+</div>

@@ -31,6 +31,7 @@
 .dont-forget-journal-icon-button > i {
   margin-right: 0;
 }
+
 .dont-forget-journal-icon-button:hover,
 .dont-forget-journal-icon-button:focus {
   box-shadow: none;

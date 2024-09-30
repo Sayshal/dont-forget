@@ -91,7 +91,7 @@ class ReminderData {
 
     //update the database with the new reminders
     return game.users
-      .get(userId)
+      .get(game.userId)
       ?.setFlag(Reminder.ID, Reminder.FLAGS.REMINDERS, newReminders);
   }
 
@@ -105,12 +105,16 @@ class ReminderData {
     };
 
     //Update the database with the updated reminder list
-    return game.users.get(relevantReminder.userId)?.setFlag(Reminder.ID, Reminder.FLAGS.REMINDERS, update);
+    return game.users
+      .get(relevantReminder.game.userId)
+      ?.setFlag(Reminder.ID, Reminder.FLAGS.REMINDERS, update);
   }
 
   //update multiple reminders on a user
   static updateUserReminders(userId, updateData) {
-    return game.users.get(userId)?.setFlag(Reminder.ID, Reminder.FLAGS.REMINDERS, updateData);
+    return game.users
+      .get(userId)
+      ?.setFlag(Reminder.ID, Reminder.FLAGS.REMINDERS, updateData);
   }
 
   //delete a specific reminder by id
@@ -129,7 +133,8 @@ class ReminderData {
   }
 }
 /* Time to go ApplicationV2! */
-const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
+const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } =
+  foundry.applications.api;
 class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
     id: `${Reminder.ID}`,
@@ -143,7 +148,7 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     actions: {
       create: ReminderConfig.create,
       delete: ReminderConfig.delete,
-      save: ReminderConfig.save,
+      //save: ReminderConfig.save,
       //edit: ReminderConfig.edit,
     },
     position: {
@@ -154,7 +159,7 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
       icon: "fas fa-note-sticky",
       resizable: true,
     },
-    classes: [`${Reminder.ID}`],
+    classes: [`${Reminder.ID}-popup`],
   };
   get title() {
     return `${Reminder.TITLE} ${game.i18n.localize(
@@ -167,18 +172,18 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     },
   };
   _prepareContext(options) {
+    console.log(
+      "REMINDER DATA PREPARE CONTEXT: ",
+      ReminderData.getRemindersForUser(game.userId)
+    );
     return {
       reminders: ReminderData.getRemindersForUser(game.userId),
     };
   }
   static async formHandler(event, form, formData) {
-    console.log(`${Reminder.ID} formHandler Logging (event): ~${event}`);
-    console.log(`${Reminder.ID} formHandler Logging (form): ~${form}`);
-    console.log(`${Reminder.ID} formHandler Logging (formData): ~${formData}`);
     const expandedData = foundry.utils.expandObject(formData);
-    console.log(`${Reminder.TITLE} Saving: `, { expandedData });
+    //console.log(`${Reminder.TITLE} Saving: `, { expandedData });
     await ReminderData.updateUserReminders(game.userId, expandedData);
-    //this.render();
   }
   static async create(event, target) {
     console.log("CREATE: " + this);
@@ -206,9 +211,11 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
 
     console.log(`${Reminder.TITLE} Button Click: `, { this: this, reminderID });
     const confirmed = await DialogV2.confirm({
-      window: {title: game.i18n.localize("DONT-FORGET.confirms.deleteConfirm.Title")},
+      window: {
+        title: game.i18n.localize("DONT-FORGET.confirms.deleteConfirm.Title"),
+      },
       content: game.i18n.localize("DONT-FORGET.confirms.deleteConfirm.Content"),
-      modal: true
+      modal: true,
     });
 
     if (confirmed && reminderID) {
