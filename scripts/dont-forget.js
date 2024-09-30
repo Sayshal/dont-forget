@@ -34,7 +34,7 @@ Hooks.once("changeSidebarTab", () => {
   console.log("FOOTER: " + journalFooter);
   const tooltip = game.i18n.localize("DONT-FORGET.button-title");
   journalFooter.append(
-    `<button type='button' class='${Reminder.ID}-icon-button flex0' title='${tooltip}'><i class='fas fa-note-sticky'></i> ${Reminder.TITLE}</button>`
+    `<button type='button' class='${Reminder.ID}-icon-button' title='${tooltip}'><i class='fas fa-note-sticky'></i> ${Reminder.TITLE}</button>`
   );
   const userId = game.userId;
   $(document).on("click", `.${Reminder.ID}-icon-button`, (event) => {
@@ -133,79 +133,85 @@ class ReminderData {
   }
 }
 /* Time to go ApplicationV2! */
-class ReminderConfig extends FormApplication {
-  static get defaultOptions() {
-    const defaults = super.defaultOptions;
-
-    const overrides = {
-      height: "auto",
-      id: `${Reminder.ID}`,
-      template: Reminder.TEMPLATES.DONTFORGET,
-      title: `${Reminder.TITLE}`,
-      userId: game.userId,
+const { ApplicationV2, HandlebarsApplicationMixin } = foundry.applications.api;
+class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
+  static DEFAULT_OPTIONS = {
+    id: `${Reminder.ID}`,
+    tag: "form",
+    form: {
+      handler: ReminderConfig._updateObject,
       closeOnSubmit: false, // do not close when submitted
       submitOnChange: true, // submit when any input changes
-      submitOnClose: true, // submit when closed
-    };
-
-    const mergedOptions = foundry.utils.mergeObject(defaults, overrides);
-
-    return mergedOptions;
+    },
+    actions: {
+      create: ReminderConfig.create,
+      delete: ReminderConfig.delete,
+    },
+    position: {
+      height: "auto",
+      width: "auto",
+    },
+    window: {
+      icon: "fas fa-note-sticky",
+      resizable: true,
+    },
+    classes: [
+      `${Reminder.ID}`,
+    ]
+  };
+  get title() {
+    return `${game.i18n.localize(this.options.window.title)}`;
   }
-  getData(options) {
+  static PARTS = {
+    form: {
+      template: Reminder.TEMPLATES.DONTFORGET,
+    },
+  };
+  _prepareContext(options) {
     return {
-      reminders: ReminderData.getRemindersForUser(options.userId),
+      reminders: ReminderData.getRemindersForUser(game.userId),
     };
   }
-
   async _updateObject(event, formData) {
     const expandedData = foundry.utils.expandObject(formData);
-    //console.log(`${Reminder.TITLE} Saving: `, {formData});
-    await ReminderData.updateUserReminders(this.options.userId, expandedData);
+    console.log(`${Reminder.TITLE} Saving: `, { formData });
+    await ReminderData.updateUserReminders(game.userId, expandedData);
+    this.render();
+  }
+  static async create(event, target) {
+    console.log("CREATE: " + this);
 
+    // Find the closest parent with the attribute 'data-reminder-id' and retrieve its value
+    const reminderElement = target.closest("[data-reminder-id]");
+    const reminderID = reminderElement
+      ? reminderElement.getAttribute("data-reminder-id")
+      : null;
+
+    console.log(`${Reminder.TITLE} Button Click: `, { this: this, reminderID });
+
+    await ReminderData.createReminder(game.userId);
     this.render();
   }
 
-  async _handleButtonClick(event) {
-    const clickedElement = $(event.currentTarget);
-    const action = clickedElement.data().action;
-    const reminderID = clickedElement
-      .parents("[data-reminder-id]")
-      ?.data()?.reminderId;
+  static async delete(event, target) {
+    console.log("DELETE: " + this);
 
-    console.log(`${Reminder.TITLE} Button Click: `, {
-      this: this,
-      action,
-      reminderID,
+    // Find the closest parent with the attribute 'data-reminder-id' and retrieve its value
+    const reminderElement = target.closest("[data-reminder-id]");
+    const reminderID = reminderElement
+      ? reminderElement.getAttribute("data-reminder-id")
+      : null;
+
+    console.log(`${Reminder.TITLE} Button Click: `, { this: this, reminderID });
+    // Will convert this dialog to DialogV2 next!
+    const confirmed = await Dialog.confirm({
+      title: game.i18n.localize("DONT-FORGET.confirms.deleteConfirm.Title"),
+      content: game.i18n.localize("DONT-FORGET.confirms.deleteConfirm.Content"),
     });
 
-    switch (action) {
-      case "create": {
-        await ReminderData.createReminder(this.options.userId);
-        this.render();
-        break;
-      }
-
-      case "delete": {
-        const confirmed = await Dialog.confirm({
-          title: game.i18n.localize("DONT-FORGET.confirms.deleteConfirm.Title"),
-          content: game.i18n.localize(
-            "DONT-FORGET.confirms.deleteConfirm.Content"
-          ),
-        });
-        if (confirmed) {
-          await ReminderData.deleteReminder(reminderID);
-          this.render();
-        }
-        break;
-      }
-      default:
-        console.log("Invalid action detected: " + action);
+    if (confirmed && reminderID) {
+      await ReminderData.deleteReminder(reminderID);
+      this.render();
     }
-  }
-
-  activateListeners(html) {
-    super.activateListeners(html); //re-enable foundrys built in listeners.
-    html.on("click", "[data-action]", this._handleButtonClick.bind(this));
   }
 }
