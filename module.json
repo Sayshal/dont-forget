@@ -17,7 +17,7 @@
     }
   ],
   "url": "https://github.com/Sayshal/dont-forget",
-  "scripts": ["scripts/dont-forget.js"],
+  "esmodules": ["scripts/dont-forget.js"],
   "languages": [
     {
       "lang": "en",

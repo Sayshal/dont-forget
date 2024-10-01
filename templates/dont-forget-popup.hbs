@@ -1,43 +1,19 @@
 <div>
-  <ul class="dont-forget">
+  <ul class='dont-forget'>
     {{#each reminders}}
-      <li class="dont-forget-list-item" data-reminder-id="{{id}}">
-        <input
-          type="checkbox"
-          name="{{id}}.isDone"
-          id="{{id}}.isDone"
-          title="{{localize 'DONT-FORGET.mark-done'}}"
-          class="dont-forget-checkbox"
-          data-dtype="Boolean"
-          {{checked isDone}}
-        />
+      <li class='dont-forget-list-item' data-reminder-id='{{id}}'>
+        <input type='checkbox' name='{{id}}.isDone' id='{{id}}.isDone' title='{{localize "DONT-FORGET.mark-done"}}' class='dont-forget-checkbox' data-dtype='Boolean' {{checked isDone}} />
 
-        <input
-          type="text"
-          value="{{label}}"
-          name="{{id}}.label"
-          id="{{id}}.label"
-          data-dtype="String"
-          class="dont-forget-input"
-        />
+        <input type='text' value='{{label}}' name='{{id}}.label' id='{{id}}.label' data-dtype='String' class='dont-forget-input' />
 
-        <button
-          type="button"
-          title="{{localize 'DONT-FORGET.delete-reminder'}}"
-          data-action="delete"
-          class="dont-forget-delete"
-        >
-          <i class="fas fa-trash"></i>
+        <button type='button' title='{{localize "DONT-FORGET.delete-reminder"}}' data-action='delete' class='dont-forget-delete'>
+          <i class='fas fa-trash'></i>
         </button>
       </li>
     {{/each}}
   </ul>
 
-  <button
-    type="button"
-    data-action="create"
-    class="dont-forget-create"
-  >
-    <i class="fas fa-plus"></i>{{localize "DONT-FORGET.add-reminder"}}
+  <button type='button' data-action='create' class='dont-forget-create'>
+    <i class='fas fa-plus'></i>{{localize 'DONT-FORGET.add-reminder'}}
   </button>
 </div>
