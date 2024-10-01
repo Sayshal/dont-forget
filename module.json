@@ -1,7 +1,7 @@
 {
   "id": "dont-forget",
   "title": "Don't Forget!",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "compatibility": {
     "minimum": "12.331",
     "verified": "12.331",

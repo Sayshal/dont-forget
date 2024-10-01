@@ -5,6 +5,7 @@
     "delete-reminder": "Delete Reminder",
     "mark-done": "Mark Done",
     "window-title": "Reminder Menu",
+    "dungeon-master": "Storyteller",
     "settings": {
       "inject-button": {
         "Name": "Display Reminder button?",

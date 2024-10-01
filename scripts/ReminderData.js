@@ -10,7 +10,21 @@ import { Reminder } from './dont-forget.js';
 //Create the Data Layer
 export class ReminderData {
   //all reminders for all users
-  static get allReminders() {
+ static getReminders(userId) {
+  userId = userId.toString();
+  console.log(`${Reminder.TITLE} | ORIGINAL USERID: `, userId);
+  if (game.users.get(userId).isGM) {
+    console.log(`${Reminder.TITLE} | USER IS GM!`);
+    return this.allReminders();
+  } else if (!game.users.get(userId).isGM) {
+    console.log(`${Reminder.TITLE} | USER IS NOT GM!`, game.users.get(userId).isGM, userId);
+    return this.getRemindersForUser(userId);
+  } else {
+    console.log(`${Reminder.TITLE} | USER IS INVALID: `, userId);
+  }
+ }
+
+  static allReminders() {
     const allReminders = game.users.reduce((accumulator, user) => {
       const userReminders = this.getRemindersForUser(user.id);
 
@@ -66,7 +80,7 @@ export class ReminderData {
   }
 
   //delete a specific reminder by id
-  static deleteReminder(reminderId) {
+  static deleteReminder(reminderId, userId) {
     const relevantReminder = this.allReminders[reminderId];
 
     //Foundry specific syntax required to delete a key from a persisted object in the database

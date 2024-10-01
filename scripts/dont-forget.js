@@ -18,7 +18,9 @@ export class Reminder {
       config: true,
       hint: `DONT-FORGET.settings.${this.SETTINGS.INJECT_BUTTON}.Hint`,
       onChange: () => ui.players.render(),
+
     });
+    console.log(`${Reminder.TITLE} | Initialize Module`);
   }
 }
 
@@ -31,13 +33,11 @@ Hooks.once('changeSidebarTab', () => {
     return;
   }
   const journalFooter = $('section[class*="journal-sidebar"]').find('footer[class*="directory-footer"]');
-  console.log('FOOTER: ' + journalFooter);
+  console.log(`${Reminder.TITLE} | Initialize Journal Button`);
   const tooltip = game.i18n.localize('DONT-FORGET.button-title');
   journalFooter.append(`<button type='button' class='${Reminder.ID}-journal-icon-button' title='${tooltip}'><i class='fas fa-note-sticky'></i> ${Reminder.TITLE}</button>`);
   const userId = game.userId;
-  $(document).on('click', `.${Reminder.ID}-journal-icon-button`, (event) => {
-    Reminder.reminderConfig.render(true, { userId });
-  });
+  $(document).on('click', `.${Reminder.ID}-journal-icon-button`, (event) => { Reminder.reminderConfig.render(true, { userId }); });
 });
 
 /* Time to go ApplicationV2! */
@@ -55,8 +55,6 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     actions: {
       create: ReminderConfig.create,
       delete: ReminderConfig.delete,
-      //save: ReminderConfig.save,
-      //edit: ReminderConfig.edit,
     },
     position: {
       height: 'auto',
@@ -69,7 +67,12 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     classes: [`${Reminder.ID}` /*, `${Reminder.ID}-popup`, `${Reminder.ID}-popup-input`, `${Reminder.ID}-popup-delete`, `${Reminder.ID}-popup-checkbox`*/],
   };
   get title() {
-    return `${Reminder.TITLE} ${game.i18n.localize('DONT-FORGET.window-title')} (${game.user.name})`;
+    if (game.users.get(game.userId).isGM){
+      return `${Reminder.TITLE} ${game.i18n.localize('DONT-FORGET.window-title')} (${game.i18n.localize('DONT-FORGET.dungeon-master')})`;
+    } else {
+      return `${Reminder.TITLE} ${game.i18n.localize('DONT-FORGET.window-title')} (${game.user.name})`;
+    }
+    
   }
   static PARTS = {
     form: {
@@ -79,12 +82,11 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
   _prepareContext(options) {
     console.log('REMINDER DATA PREPARE CONTEXT: ', ReminderData.getRemindersForUser(game.userId));
     return {
-      reminders: ReminderData.getRemindersForUser(game.userId),
+      reminders: ReminderData.getReminders(game.userId),
     };
   }
   static async formHandler(event, form, formData) {
     //const expandedData = foundry.utils.expandObject(formData.object);
-    //console.log(`${Reminder.TITLE} Saving: `, { expandedData });
     await ReminderData.updateUserReminders(game.userId, formData.object);
   }
   static async create(event, target) {
@@ -92,9 +94,8 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
 
     // Find the closest parent with the attribute 'data-reminder-id' and retrieve its value
     const reminderElement = target.closest('[data-reminder-id]');
-    const reminderID = reminderElement ? reminderElement.getAttribute('data-reminder-id') : null;
 
-    console.log(`${Reminder.TITLE} Button Click: `, { this: this, reminderID });
+    console.log(`${Reminder.TITLE} Button Click: `, { this: this, reminderID, userId });
 
     await ReminderData.createReminder(game.userId);
     this.render();
@@ -113,7 +114,7 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
         title: game.i18n.localize('DONT-FORGET.confirms.deleteConfirm.Title'),
       },
       content: game.i18n.localize('DONT-FORGET.confirms.deleteConfirm.Content'),
-      modal: true,
+      modal: false,
     });
 
     if (confirmed && reminderID) {
