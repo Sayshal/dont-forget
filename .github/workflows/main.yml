@@ -24,7 +24,8 @@ jobs:
         id: set-release-notes-github
         run: |
           echo "- Updates:" >> release_notes.txt
-          echo "  - Testing autobuild" >> release_notes.txt
+          echo "  - Refactored CSS for the popup, allowing an edit button which by default is locked, displaying all reminders as a list." >> release_notes.txt
+          echo "  - Refactored all functions to allow DM to delete other users' reminders" >> release_notes.txt
           echo "release-notes-github<<EOF" >> $GITHUB_ENV
           cat release_notes.txt >> $GITHUB_ENV
           echo "EOF" >> $GITHUB_ENV
@@ -75,9 +76,9 @@ jobs:
               "download": "'"https://github.com/Sayshal/dont-forget/releases/download/${{ steps.get-version.outputs.version }}/module.zip"'",
               "notes": "'"https://github.com/Sayshal/dont-forget/releases/tag/${{ steps.get-version.outputs.version }}"'",
               "compatibility": {
-                "minimum": "'"12.328"'",
-                "verified": "'"12"'",
-                "maximum": "'"12"'"
+                "minimum": "'"12.331"'",
+                "verified": "'"12.331"'",
+                "maximum": "'"12.999"'"
               }
             }
           }'

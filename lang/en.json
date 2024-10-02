@@ -1,8 +1,10 @@
 {
   "DONT-FORGET": {
     "button-title": "Open Reminders",
-    "add-reminder": "New",
+    "add-reminder": "Add Reminder",
+    "edit-reminder": "Edit Reminder",
     "delete-reminder": "Delete Reminder",
+    "delete-completed": "Delete Completed?",
     "mark-done": "Mark Done",
     "window-title": "Reminder Menu",
     "dungeon-master": "Storyteller",
@@ -16,6 +18,10 @@
       "deleteConfirm": {
         "Title": "Delete Reminder?",
         "Content": "Are you sure you want to delete this Reminder? This action cannot be undone."
+      },
+      "deleteCompletedConfirm": {
+        "Title": "Delete Completed Reminder(s)?",
+        "Content": "Are you sure you want to delete all completed Reminders? This action cannot be undone."
       }
     }
   }

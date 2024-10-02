@@ -1,22 +1,4 @@
-.dont-forget-journal-icon-button {
-  line-height: normal;
-  border: 0;
-  align-self: center;
-  height: auto;
-  display: inline-block;
-}
-
-.dont-forget-journal-icon-button > i {
-  margin-right: 0;
-}
-
-.dont-forget-journal-icon-button:hover,
-.dont-forget-journal-icon-button:focus {
-  box-shadow: none;
-  text-shadow: 0 0 5px red;
-}
-
-/* Ensure the dont-forget list has no unwanted padding or margin */
+/* Main container for the 'Don't Forget' popup, ensures no unwanted padding or margin */
 .dont-forget {
   list-style: none;
   padding: 0;
@@ -25,43 +7,78 @@
   max-width: 500px;
 }
 
+/* Each item in the 'Don't Forget' list, uses flexbox for horizontal alignment */
 .dont-forget-list-item {
-  align-content: center;
-  display: grid;
+  display: flex;
   width: 90%;
-  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  justify-content: space-between;
   padding: 5px 0;
   gap: 10px;
   box-sizing: border-box;
 }
 
-/* Checkbox: Natural size with no extra margins */
+/* Checkbox styling: Natural size with no extra margins */
 .dont-forget-checkbox {
-  align-content: center;
-  padding: 2px;
   margin: 0;
-  box-sizing: border-box;
+  padding: 0;
 }
 
 /* Input field: Stretches to take up remaining space */
 .dont-forget-input {
-  align-content: center;
-  width: 100%;
+  flex-grow: 1;
   padding: 5px;
   box-sizing: border-box;
 }
 
-/* Delete button: Natural size */
+/* Edit and Delete Buttons: Common styles for the edit and delete buttons */
+.dont-forget-edit,
 .dont-forget-delete {
-  align-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   background: transparent !important;
   border: none !important;
-  display: flex;
   padding: 2px;
   margin: 0;
-  box-sizing: border-box;
+  height: 30px;
+  width: 30px;
+  cursor: pointer;
 }
+
+/* Container for Delete Completed and Create buttons, uses flexbox for alignment */
+.dont-forget-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* Ensure consistent size for Delete Completed and Create buttons */
+.dont-forget-delete-completed,
 .dont-forget-create {
-  align-content: center !important;
-  width: 90%;
+  height: 40px;
+  margin: 0 5px;
+}
+
+/* Journal icon button styling for consistency and interactivity */
+.dont-forget-journal-icon-button {
+  line-height: normal;
+  border: 0;
+  align-self: center;
+  height: auto;
+  display: inline-block;
+}
+
+/* Styling for icon inside journal icon button */
+.dont-forget-journal-icon-button > i {
+  margin-right: 0;
+}
+
+/* Hover and focus effects for journal icon buttons */
+.dont-forget-journal-icon-button:hover,
+.dont-forget-journal-icon-button:focus {
+  box-shadow: none;
+  text-shadow: 0 0 5px red;
 }
