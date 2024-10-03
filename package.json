@@ -1,0 +1,20 @@
+{
+  "name": "dont-forget",
+  "version": "1.0.0",
+  "description": "FoundryVTT Module",
+  "scripts": {},
+  "author": "Tyler",
+  "license": "MIT",
+  "private": true,
+  "bugs": {
+    "url": "https://github.com/Sayshal/dont-forget/issues"
+  },
+  "homepage": "https://github.com/Sayshal/dont-forget#readme",
+  "devDependencies": {
+    "@eslint/js": "^9.11.1",
+    "eslint": "^8.52.0",
+    "globals": "^15.10.0",
+    "prettier": "^3.1.0",
+    "prettier-eslint": "^16.1.2"
+  }
+}

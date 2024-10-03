@@ -104,7 +104,7 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
 
   static async delete(event, target) {
     console.log('DELETE: ' + { target });
-
+    
     // Find the closest parent with the attribute 'data-reminder-id' and retrieve its value
     const reminderElement = target.closest('[data-reminder-id]');
     const reminderID = reminderElement ? reminderElement.getAttribute('data-reminder-id') : null;

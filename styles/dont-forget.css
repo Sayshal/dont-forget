@@ -3,8 +3,9 @@
   list-style: none;
   padding: 0;
   margin: 0;
-  width: 30vw;
-  max-width: 500px;
+  width: 50vw;
+  max-width: 750;
+  display: initial;
 }
 
 /* Each item in the 'Don't Forget' list, uses flexbox for horizontal alignment */
