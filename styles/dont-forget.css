@@ -1,17 +1,13 @@
-/* Main container for the 'Don't Forget' popup, ensures no unwanted padding or margin */
+/* Main container for 'Don't Forget', ensures no unwanted padding or margin - Special thanks to Lukas for CSS fixes :) */
 .dont-forget {
-  list-style: none;
-  padding: 0;
-  margin: 0;
   width: 50vw;
-  max-width: 750;
+  max-width: 750px;
   display: initial;
 }
 
 /* Each item in the 'Don't Forget' list, uses flexbox for horizontal alignment */
 .dont-forget-list-item {
   display: flex;
-  width: 90%;
   align-items: center;
   justify-content: space-between;
   padding: 5px 0;
