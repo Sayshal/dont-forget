@@ -8,6 +8,6 @@ export function registerSettings() {
     scope: 'client',
     config: true,
     hint: `DONT-FORGET.settings.${Reminder.SETTINGS.INJECT_BUTTON}.Hint`,
-    onChange: () => ui.players.render(),
+    onChange: () => ui.players.render()
   });
 }

@@ -3,12 +3,17 @@ import { registerSettings } from './settings.js';
 
 export class Reminder {
   static ID = 'dont-forget';
+
   static TITLE = "Don't Forget!";
+
   static FLAGS = { REMINDERS: 'reminders' };
+
   static TEMPLATES = {
-    DONTFORGETPOPUP: `modules/${this.ID}/templates/dont-forget-popup.hbs`,
+    DONTFORGETPOPUP: `modules/${this.ID}/templates/dont-forget-popup.hbs`
   };
+
   static SETTINGS = { INJECT_BUTTON: 'inject-button' };
+
   static initialize() {
     this.reminderConfig = new ReminderConfig();
     console.log(`${Reminder.TITLE} | Initialize Module`);
@@ -26,20 +31,20 @@ Hooks.once('init', () => {
 });
 Hooks.once('changeSidebarTab', () => {
   if (!game.settings.get(Reminder.ID, Reminder.SETTINGS.INJECT_BUTTON)) {
-    //Hide everything if the setting is disabled.
     return;
   }
   const journalFooter = $('section[class*="journal-sidebar"]').find('footer[class*="directory-footer"]');
   console.log(`${Reminder.TITLE} | Initialize Journal Button`);
   const tooltip = game.i18n.localize('DONT-FORGET.button-title');
-  journalFooter.append(`<button type='button' class='${Reminder.ID}-journal-icon-button' title='${tooltip}'><i class='fas fa-note-sticky'></i> ${Reminder.TITLE}</button>`);
+  journalFooter.append(
+    `<button type='button' class='${Reminder.ID}-journal-icon-button' title='${tooltip}'><i class='fas fa-note-sticky'></i> ${Reminder.TITLE}</button>`
+  );
   const userId = game.userId;
   $(document).on('click', `.${Reminder.ID}-journal-icon-button`, (event) => {
     Reminder.reminderConfig.render(true, { userId });
   });
 });
 
-/* Time to go ApplicationV2! */
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
@@ -49,24 +54,25 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
       handler: ReminderConfig.formHandler,
       closeOnSubmit: false, // do not close when submitted
       submitOnChange: true, // submit when any input changes
-      submitOnClose: true, // submit on close
+      submitOnClose: true // submit on close
     },
     actions: {
-      create: ReminderConfig.create,
-      delete: ReminderConfig.delete,
-      edit: ReminderConfig.edit,
-      ['delete-completed']: ReminderConfig.deleteCompleted,
+      'create': ReminderConfig.create,
+      'delete': ReminderConfig.delete,
+      'edit': ReminderConfig.edit,
+      'delete-completed': ReminderConfig.deleteCompleted
     },
     position: {
       height: 'auto',
-      width: 'auto',
+      width: 'auto'
     },
     window: {
       icon: 'fas fa-note-sticky',
-      resizable: false,
+      resizable: false
     },
-    classes: [`${Reminder.ID}` /*, `${Reminder.ID}-popup`, `${Reminder.ID}-popup-input`, `${Reminder.ID}-popup-delete`, `${Reminder.ID}-popup-checkbox`*/],
+    classes: [`${Reminder.ID}`]
   };
+
   get title() {
     if (game.users.get(game.userId).isGM) {
       return `${Reminder.TITLE} ${game.i18n.localize('DONT-FORGET.window-title')} (${game.i18n.localize('DONT-FORGET.dungeon-master')})`;
@@ -74,37 +80,42 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
       return `${Reminder.TITLE} ${game.i18n.localize('DONT-FORGET.window-title')} (${game.user.name})`;
     }
   }
+
   static PARTS = {
     form: {
-      template: Reminder.TEMPLATES.DONTFORGETPOPUP,
-    },
+      template: Reminder.TEMPLATES.DONTFORGETPOPUP
+    }
   };
+
   _prepareContext(options) {
     const reminders = ReminderData.getReminders(game.userId);
     console.log('REMINDER DATA PREPARE CONTEXT: ', ReminderData.getRemindersForUser(game.userId));
     return {
-      reminders: reminders, // Now contains userId for each reminder.
+      reminders: reminders // Now contains userId for each reminder.
     };
   }
+
   static async formHandler(event, form, formData) {
-    //const expandedData = foundry.utils.expandObject(formData.object);
+    // const expandedData = foundry.utils.expandObject(formData.object);
+    console.log(formData, formData.object);
     await ReminderData.updateUserReminders(game.userId, formData.object);
   }
+
   static async create(event, target) {
-    console.log('CREATE: ' + this);
+    console.log(`CREATE: ${this}`);
 
     // Find the closest parent with the attribute 'data-reminder-id' and retrieve its value
     const reminderElement = target.closest('[data-reminder-id]');
 
-    //console.log(`${Reminder.TITLE} Button Click: `, { this: this, reminderID, userId });
+    // console.log(`${Reminder.TITLE} Button Click: `, { this: this, reminderID, userId });
 
     await ReminderData.createReminder(game.userId);
     this.render();
   }
 
   static async delete(event, target) {
-    console.log('DELETE: ' + { target });
-    
+    console.log(`DELETE: ${{ target }}`);
+
     // Find the closest parent with the attribute 'data-reminder-id' and retrieve its value
     const reminderElement = target.closest('[data-reminder-id]');
     const reminderID = reminderElement ? reminderElement.getAttribute('data-reminder-id') : null;
@@ -115,10 +126,10 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
     console.log(`${Reminder.TITLE} Button Click: `, { this: this, reminderID, userId });
     const confirmed = await DialogV2.confirm({
       window: {
-        title: game.i18n.localize('DONT-FORGET.confirms.deleteConfirm.Title'),
+        title: game.i18n.localize('DONT-FORGET.confirms.deleteConfirm.Title')
       },
       content: game.i18n.localize('DONT-FORGET.confirms.deleteConfirm.Content'),
-      modal: false,
+      modal: false
     });
 
     if (confirmed && reminderID && userId) {
@@ -132,6 +143,7 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
       }
     }
   }
+
   static edit(event, target) {
     if (target.closest('.dont-forget-edit')) {
       const listItem = target.closest('.dont-forget-list-item');
@@ -154,10 +166,10 @@ class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
       // Confirm deletion
       const confirmed = await DialogV2.confirm({
         window: {
-          title: game.i18n.localize('DONT-FORGET.confirms.deleteCompletedConfirm.Title'),
+          title: game.i18n.localize('DONT-FORGET.confirms.deleteCompletedConfirm.Title')
         },
         content: game.i18n.localize('DONT-FORGET.confirms.deleteCompletedConfirm.Content'),
-        modal: false,
+        modal: false
       });
       if (!confirmed) return;
 
