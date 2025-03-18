@@ -25,5 +25,11 @@
       "path": "lang/en.json"
     }
   ],
-  "styles": ["styles/dont-forget.css"]
+  "styles": ["styles/dont-forget.css"],
+  "flags": {
+    "hotReload": {
+      "extensions": ["css", "html", "hbs", "json"],
+      "paths": ["styles", "lang", "templates"]
+    }
+  }
 }
