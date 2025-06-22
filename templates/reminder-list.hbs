@@ -1,0 +1,51 @@
+<div class="reminder-container">
+	{{#if reminders.length}}
+		<ul class="reminder-list">
+			{{#each reminders}}
+				<li class="reminder-item" data-reminder-id="{{id}}" data-user-id="{{userId}}">
+					<div class="reminder-checkbox-container">
+						<input type="checkbox" name="{{id}}.isDone" id="reminder-{{id}}" class="reminder-checkbox"
+							{{checked isDone}} data-dtype="Boolean" title="{{localize 'DONT-FORGET.mark-done'}}">
+					</div>
+
+					<div class="reminder-content">
+						<input type="text" name="{{id}}.label" value="{{label}}" class="reminder-input" data-dtype="String"
+							readonly>
+
+						{{#if ../isGM}}
+							<div class="reminder-owner">
+								<span class="owner-label">{{localize 'DONT-FORGET.created-by'}}</span>
+								<span class="owner-name">{{getUserName userId}}</span>
+							</div>
+						{{/if}}
+					</div>
+
+					<div class="reminder-actions">
+						<button type="button" data-action="edit" class="reminder-edit"
+							title="{{localize 'DONT-FORGET.edit-reminder'}}">
+							<i class="fas fa-edit"></i>
+						</button>
+						<button type="button" data-action="delete" class="reminder-delete"
+							title="{{localize 'DONT-FORGET.delete-reminder'}}">
+							<i class="fas fa-trash"></i>
+						</button>
+					</div>
+				</li>
+			{{/each}}
+		</ul>
+	{{else}}
+		<p class="reminder-empty">{{localize 'DONT-FORGET.no-reminders'}}</p>
+	{{/if}}
+
+	<div class="reminder-footer">
+		<button type="button" data-action="delete-completed" class="reminder-delete-completed"
+			title="{{localize 'DONT-FORGET.delete-completed-tooltip'}}">
+			<i class="fas fa-trash"></i> {{localize 'DONT-FORGET.delete-completed'}}
+		</button>
+
+		<button type="button" data-action="create" class="reminder-create"
+			title="{{localize 'DONT-FORGET.add-reminder-tooltip'}}">
+			<i class="fas fa-plus"></i> {{localize 'DONT-FORGET.add-reminder'}}
+		</button>
+	</div>
+</div>

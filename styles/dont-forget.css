@@ -1,81 +1,204 @@
-/* Main container for 'Don't Forget', ensures no unwanted padding or margin - Special thanks to Lukas for CSS fixes :) */
+/* Main container styling */
 .dont-forget {
-  width: 50vw;
-  max-width: 750px;
-  display: initial;
+  color: var(--color-text-dark-primary);
+  font-family: var(--font-primary);
 }
 
-/* Each item in the 'Don't Forget' list, uses flexbox for horizontal alignment */
-.dont-forget-list-item {
+.window-content .reminder-container {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 5px 0;
-  gap: 10px;
-  box-sizing: border-box;
-}
-
-/* Checkbox styling: Natural size with no extra margins */
-.dont-forget-checkbox {
-  margin: 0;
+  flex-direction: column;
+  height: 100%;
   padding: 0;
 }
 
-/* Input field: Stretches to take up remaining space */
-.dont-forget-input {
-  flex-grow: 1;
-  padding: 5px;
-  box-sizing: border-box;
+/* Reminder list */
+.reminder-list {
+  flex: 1;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
 }
 
-/* Edit and Delete Buttons: Common styles for the edit and delete buttons */
-.dont-forget-edit,
-.dont-forget-delete {
+/* Empty state */
+.reminder-empty {
+  padding: 1rem;
+  color: var(--color-text-dark-secondary);
+  font-style: italic;
+  text-align: center;
+}
+
+/* Individual reminder item */
+.reminder-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--color-border-light-tertiary);
+  transition: background-color 0.2s ease;
+}
+
+.reminder-item:hover {
+  background-color: var(--color-border-light-highlight);
+}
+
+/* Completed reminders */
+.reminder-item input[type='checkbox']:checked ~ .reminder-content .reminder-input {
+  color: var(--color-text-dark-secondary);
+  text-decoration: line-through;
+}
+
+/* Checkbox styling */
+.reminder-checkbox-container {
+  display: flex;
   justify-content: center;
-  background: transparent !important;
-  border: none !important;
-  padding: 2px;
-  margin: 0;
-  height: 30px;
-  width: 30px;
+  align-items: center;
+  min-width: 20px;
+  margin-right: 0.75rem;
+}
+
+.reminder-checkbox {
   cursor: pointer;
 }
 
-/* Container for Delete Completed and Create buttons, uses flexbox for alignment */
-.dont-forget-buttons {
+/* Reminder content area */
+.reminder-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
+.reminder-input {
+  width: 100%;
+  margin-bottom: 0.25rem;
+  padding: 0.25rem;
+  border: none;
+  border-radius: 3px;
+  color: var(--color-text-dark-primary);
+  background: none;
+}
+
+.reminder-input:not([readonly]) {
+  border: 1px solid var(--color-border-highlight);
+  background-color: #ffffff0d;
+  box-shadow: 0 0 3px var(--color-shadow-primary);
+}
+
+.reminder-input:focus {
+  outline: none;
+  box-shadow: 0 0 5px var(--color-shadow-highlight);
+}
+
+/* Owner information styling */
+.reminder-owner {
+  margin-top: 0.25rem;
+  color: var(--color-text-dark-secondary);
+  font-size: 0.8rem;
+}
+
+.owner-label {
+  opacity: 0.7;
+  margin-right: 0.25rem;
+}
+
+.owner-name {
+  font-weight: bold;
+}
+
+/* Action buttons */
+.reminder-actions {
+  gap: 0.5rem;
+  display: flex;
+  margin-left: 0.5rem;
+}
+
+.reminder-edit,
+.reminder-delete {
+  padding: 0.25rem;
+  border: none;
+  border-radius: 3px;
+  color: var(--color-text-dark-secondary);
+  cursor: pointer;
+  background: none;
+  transition: all 0.2s ease;
+}
+
+.reminder-edit:hover {
+  color: var(--color-text-hyperlink);
+  background-color: #0000001a;
+}
+
+.reminder-delete:hover {
+  color: var(--color-level-warning);
+  background-color: #0000001a;
+}
+
+/* Footer area */
+.reminder-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--color-border-light-tertiary);
+}
+
+.reminder-create,
+.reminder-delete-completed {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--color-border-dark-tertiary);
+  border-radius: 3px;
+  color: var(--color-text-dark-primary);
+  cursor: pointer;
+  background-color: var(--color-button-background);
+  transition: all 0.2s ease;
+}
+
+.reminder-create:hover {
+  color: var(--color-text-light-highlight);
+  background-color: var(--color-button-primary);
+}
+
+.reminder-delete-completed:hover {
+  color: var(--color-text-light-highlight);
+  background-color: var(--color-button-danger);
+}
+
+/* Button in the player list */
+.dont-forget-button {
+  gap: 0.5rem;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: 10px;
+  padding: 0.5rem;
+  border: none;
+  color: var(--color-text-dark-secondary);
+  cursor: pointer;
+  background: none;
+  transition: all 0.2s ease;
 }
 
-/* Ensure consistent size for Delete Completed and Create buttons */
-.dont-forget-delete-completed,
-.dont-forget-create {
-  height: 40px;
-  margin: 0 5px;
+.dont-forget-button:hover {
+  color: var(--color-text-hyperlink);
+  text-shadow: 0 0 4px var(--color-shadow-highlight);
 }
 
-/* Journal icon button styling for consistency and interactivity */
-.dont-forget-journal-icon-button {
-  line-height: normal;
-  border: 0;
-  align-self: center;
-  height: auto;
-  display: inline-block;
+.dont-forget-button i {
+  margin-right: 0.25rem;
 }
 
-/* Styling for icon inside journal icon button */
-.dont-forget-journal-icon-button > i {
-  margin-right: 0;
+/* Position reminder icon on the far right */
+.dont-forget-player-icon {
+  position: absolute;
+  right: 8px;
+  color: var(--user-color);
+  cursor: pointer;
+  transition: color 0.2s ease;
 }
 
-/* Hover and focus effects for journal icon buttons */
-.dont-forget-journal-icon-button:hover,
-.dont-forget-journal-icon-button:focus {
-  box-shadow: none;
-  text-shadow: 0 0 5px red;
+.dont-forget-player-icon:hover {
+  color: var(--color-text-hyperlink);
+  text-shadow: 0 0 3px var(--color-shadow-highlight);
+}
+
+/* Ensure parent has positioning context */
+#players li.player {
+  position: relative;
 }
