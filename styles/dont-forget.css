@@ -3,6 +3,11 @@
   /* Dialog styles - prevent label wrapping and auto-size */
   &.create-reminder-dialog,
   &.edit-reminder-dialog {
+    .dialog-content {
+      padding: 1rem;
+      min-width: 300px;
+    }
+
     label {
       display: block;
       margin-bottom: 0.5rem;
@@ -11,46 +16,67 @@
     }
 
     input[type='text'],
+    textarea,
     select {
       width: 100%;
       padding: 0.5rem;
       border-radius: 3px;
       font-family: inherit;
+    }
 
-      &:focus {
-        outline: none;
-        border-color: var(--color-border-highlight);
-        box-shadow: 0 0 5px var(--color-shadow-highlight);
+    textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: inherit;
+      line-height: 1.4;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+
+      &:last-child {
+        margin-bottom: 0;
       }
     }
   }
 
-  /* Table container - full width */
+  /* Main application window - ensure full height usage */
+  &:not(.create-reminder-dialog, .edit-reminder-dialog) {
+    .window-content {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+  }
+
+  /* Table container - full width and height */
   .reminder-container {
     display: flex;
     flex-direction: column;
     height: 100%;
-    padding: 0;
+    padding: 1rem;
     width: 100%;
+    box-sizing: border-box;
 
     .reminder-table-container {
       flex: 1;
       overflow-y: auto;
       margin-bottom: 1rem;
-      width: 100%; /* Ensure full width */
+      width: 100%;
     }
 
     /* Reminder table - fill container */
     .reminder-table {
-      width: auto;
+      width: 100%;
       border-collapse: collapse;
       font-size: 0.9rem;
       table-layout: auto;
+      margin: 0;
 
       th,
       td {
         padding: 0.75rem 0.5rem;
-        border-bottom: 1px solid var(--color-border-light-tertiary);
         text-align: left;
         vertical-align: middle;
       }
@@ -60,7 +86,7 @@
         position: sticky;
         top: 0;
         z-index: 1;
-        white-space: nowrap; /* Prevent header wrapping */
+        white-space: nowrap;
       }
 
       /* Column sizing - let them size naturally but with minimums */
@@ -71,8 +97,8 @@
 
       .col-reminder {
         min-width: 200px;
-        max-width: none; /* Allow growth */
-        word-wrap: break-word; /* Only wrap when absolutely necessary */
+        max-width: none;
+        word-wrap: break-word;
 
         .reminder-text {
           word-break: break-word;
@@ -96,13 +122,9 @@
       }
     }
 
-    /* Reminder rows */
+    /* Reminder rows - fix hover contrast */
     .reminder-row {
-      transition: background-color 0.2s ease;
-
-      &:hover {
-        background-color: var(--color-border-light-highlight);
-      }
+      transition: all 0.2s ease;
 
       &.completed {
         opacity: 0.7;
@@ -111,27 +133,6 @@
           text-decoration: line-through;
         }
       }
-    }
-
-    /* Reminder text styling */
-    .reminder-text {
-      font-size: inherit;
-      line-height: 1.4;
-    }
-
-    /* Checkbox styling */
-    .reminder-checkbox {
-      cursor: pointer;
-      transform: scale(1.1);
-    }
-
-    /* Creator and time styling */
-    .creator-name {
-      font-weight: 500;
-    }
-
-    .created-time {
-      font-size: 0.85rem;
     }
 
     /* Action buttons */
@@ -151,13 +152,8 @@
         font-size: 0.9rem;
 
         &:hover {
-          &.reminder-edit {
-            color: var(--color-text-hyperlink);
-          }
-
-          &.reminder-delete {
-            color: var(--color-level-warning);
-          }
+          box-shadow: none;
+          outline: none;
         }
       }
     }
@@ -168,7 +164,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 3rem 1rem;
+      padding: 1rem 0;
       font-style: italic;
       text-align: center;
     }
@@ -176,46 +172,14 @@
     /* Footer area */
     .reminder-footer {
       display: flex;
-      justify-content: space-between;
-      padding: 0.75rem 0;
-      border-top: 1px solid var(--color-border-light-tertiary);
+      justify-content: center;
       margin-top: auto;
+      gap: 0.5rem;
 
       .reminder-create,
       .reminder-delete-completed {
-        padding: 0.5rem 0.75rem;
-        border-radius: 3px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        white-space: nowrap; /* Prevent button text wrapping */
-
-        &:hover {
-          &.reminder-create {
-            background-color: var(--color-button-primary);
-          }
-
-          &.reminder-delete-completed {
-            background-color: var(--color-button-danger);
-          }
-        }
-      }
-    }
-  }
-
-  /* Responsive adjustments */
-  @media (width <= 600px) {
-    max-width: 90vw !important;
-
-    .reminder-table {
-      font-size: 0.8rem;
-
-      th,
-      td {
-        padding: 0.5rem 0.25rem;
-      }
-
-      .col-created {
-        display: none;
+        width: auto;
+        white-space: nowrap;
       }
     }
   }
@@ -229,8 +193,8 @@
 
   /* Header button styling */
   .dont-forget-header-button {
-    margin-left: auto; /* Push to the right */
-    color: var(--user-color); /* Use user color as requested */
+    margin-left: auto;
+    color: var(--user-color);
     cursor: pointer;
     transition: all 0.2s ease;
     font-size: 1rem;

@@ -212,7 +212,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     <form id="create-reminder-form">
       <div class="form-group">
         <label for="reminder-text">${game.i18n.localize('DONT-FORGET.reminder-text')}</label>
-        <input type="text" id="reminder-text" name="reminderText" placeholder="${game.i18n.localize('DONT-FORGET.new-reminder-text')}" autofocus />
+        <textarea id="reminder-text" name="reminderText" placeholder="${game.i18n.localize('DONT-FORGET.new-reminder-text')}" autofocus></textarea>
       </div>
       ${
         game.user.isGM ?
@@ -238,7 +238,6 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ok: {
         label: game.i18n.localize('DONT-FORGET.create'),
         callback: (event, button, dialog) => {
-          // Access form data through button.form.elements
           const reminderText = button.form.elements.reminderText.value;
           const reminderOwner = button.form.elements.reminderOwner?.value;
 
@@ -253,7 +252,6 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       classes: [DontForget.ID, 'create-reminder-dialog']
     });
 
-    // If we got valid form data back
     if (result) {
       const reminderData = {
         label: result.reminderText || game.i18n.localize('DONT-FORGET.new-reminder-text')
@@ -261,13 +259,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       const ownerId = game.user.isGM && result.reminderOwner ? result.reminderOwner : game.user.id;
 
-      // Create reminder
       await ReminderManager.createReminder(ownerId, reminderData);
-
-      // Show success message
       ui.notifications.info(game.i18n.localize('DONT-FORGET.reminder-created'));
-
-      // Re-render the app
       this.render();
     }
   }
@@ -312,8 +305,6 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!reminderElement) return;
 
     const reminderId = reminderElement.dataset.reminderId;
-
-    // Get all reminders and find the specific one
     const allReminders = ReminderManager.getReminders(game.user.id);
     const reminder = allReminders[reminderId];
 
@@ -322,7 +313,6 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return;
     }
 
-    // Check permissions
     if (game.user.id !== reminder.userId && !game.user.isGM) {
       ui.notifications.error("You don't have permission to edit this reminder");
       return;
@@ -343,7 +333,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     <form id="edit-reminder-form">
       <div class="form-group">
         <label for="reminder-text">${game.i18n.localize('DONT-FORGET.reminder-text')}</label>
-        <input type="text" id="reminder-text" name="reminderText" placeholder="${reminder.label}" autofocus />
+        <textarea id="reminder-text" name="reminderText" autofocus>${reminder.label}</textarea>
       </div>
       ${
         game.user.isGM ?
@@ -369,7 +359,6 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ok: {
         label: game.i18n.localize('DONT-FORGET.save'),
         callback: (event, button, dialog) => {
-          // Access form data through button.form.elements
           const reminderText = button.form.elements.reminderText.value;
           const reminderOwner = button.form.elements.reminderOwner?.value;
 
@@ -381,39 +370,27 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       },
       modal: true,
       rejectClose: false,
-      classes: [DontForget.ID, 'edit-reminder-dialog'],
-      position: { width: 'auto', height: 'auto' }
+      classes: [DontForget.ID, 'edit-reminder-dialog']
     });
 
-    // If we got valid form data back
     if (result) {
       const updateData = {
         label: result.reminderText
       };
 
-      // Handle owner change if GM changed it
       if (game.user.isGM && result.reminderOwner && result.reminderOwner !== reminder.userId) {
-        // If owner is changing, we need to delete from old user and create for new user
         const newOwnerId = result.reminderOwner;
-
-        // Delete from old owner
         await ReminderManager.deleteReminder(reminderId, reminder.userId);
-
-        // Create for new owner
         const newReminderData = {
           label: result.reminderText,
           isDone: reminder.isDone
         };
         await ReminderManager.createReminder(newOwnerId, newReminderData);
       } else {
-        // Just update the existing reminder
         await ReminderManager.updateReminder(reminderId, updateData);
       }
 
-      // Show success message
       ui.notifications.info('Reminder updated successfully!');
-
-      // Re-render the app
       this.render();
     }
   }
