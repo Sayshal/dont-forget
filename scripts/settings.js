@@ -1,13 +1,16 @@
-import { Reminder } from './dont-forget.js';
+import { DontForget } from './dont-forget.js';
 
+/**
+ * Register module settings
+ */
 export function registerSettings() {
-  game.settings.register(Reminder.ID, Reminder.SETTINGS.INJECT_BUTTON, {
-    name: `DONT-FORGET.settings.${Reminder.SETTINGS.INJECT_BUTTON}.Name`,
-    default: true,
-    type: Boolean,
+  game.settings.register(DontForget.ID, DontForget.SETTINGS.INJECT_BUTTON, {
+    name: `DONT-FORGET.settings.${DontForget.SETTINGS.INJECT_BUTTON}.Name`,
+    hint: `DONT-FORGET.settings.${DontForget.SETTINGS.INJECT_BUTTON}.Hint`,
     scope: 'client',
     config: true,
-    hint: `DONT-FORGET.settings.${Reminder.SETTINGS.INJECT_BUTTON}.Hint`,
+    type: Boolean,
+    default: true,
     onChange: () => ui.players.render()
   });
 }

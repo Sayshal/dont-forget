@@ -1,192 +1,430 @@
-import { ReminderData } from './ReminderData.js';
+import { ReminderManager } from './reminder-manager.js';
 import { registerSettings } from './settings.js';
 
-export class Reminder {
+/**
+ * Main module class that initializes the Don't Forget module
+ */
+export class DontForget {
   static ID = 'dont-forget';
-
   static TITLE = "Don't Forget!";
 
-  static FLAGS = { REMINDERS: 'reminders' };
-
-  static TEMPLATES = {
-    DONTFORGETPOPUP: `modules/${this.ID}/templates/dont-forget-popup.hbs`
+  static FLAGS = {
+    REMINDERS: 'reminders'
   };
 
-  static SETTINGS = { INJECT_BUTTON: 'inject-button' };
+  static TEMPLATES = {
+    REMINDER_LIST: `modules/${this.ID}/templates/reminder-list.hbs`,
+    CREATE_REMINDER_FORM: `modules/${this.ID}/templates/create-reminder.hbs`
+  };
 
+  static SETTINGS = {
+    INJECT_BUTTON: 'inject-button'
+  };
+
+  /**
+   * Initialize the module
+   */
   static initialize() {
-    this.reminderConfig = new ReminderConfig();
-    console.log(`${Reminder.TITLE} | Initialize Module`);
+    console.log(`${this.TITLE} | Initializing module`);
+
+    // Register settings
     registerSettings();
-    console.log(`${Reminder.TITLE} | Register Settings`);
-    Handlebars.registerHelper('getUserName', function (userId) {
-      const user = game.users.get(userId);
-      return user ? user.name : 'Unknown'; // Fallback in case the user no longer exists.
-    });
+
+    // Create reminder app instance
+    this.reminderApp = new ReminderApp();
   }
 }
 
+/**
+ * Hook initialization
+ */
 Hooks.once('init', () => {
-  Reminder.initialize();
+  DontForget.initialize();
 });
-Hooks.once('changeSidebarTab', () => {
-  if (!game.settings.get(Reminder.ID, Reminder.SETTINGS.INJECT_BUTTON)) {
+
+/**
+ * Add reminder button to the player list header
+ */
+Hooks.on('renderPlayerList', (app, html, data) => {
+  if (!game.settings.get(DontForget.ID, DontForget.SETTINGS.INJECT_BUTTON)) {
     return;
   }
-  const journalFooter = $('section[class*="journal-sidebar"]').find('footer[class*="directory-footer"]');
-  console.log(`${Reminder.TITLE} | Initialize Journal Button`);
-  const tooltip = game.i18n.localize('DONT-FORGET.button-title');
-  journalFooter.append(
-    `<button type='button' class='${Reminder.ID}-journal-icon-button' title='${tooltip}'><i class='fas fa-note-sticky'></i> ${Reminder.TITLE}</button>`
-  );
-  const userId = game.userId;
-  $(document).on('click', `.${Reminder.ID}-journal-icon-button`, (event) => {
-    Reminder.reminderConfig.render(true, { userId });
-  });
+
+  // Remove any existing reminder buttons
+  html.find(`.${DontForget.ID}-header-button`).remove();
+
+  // Add single button to the h3 header
+  const $header = html.find('h3[aria-label="Players"]');
+
+  if ($header.length > 0) {
+    const $reminderButton = $(
+      `<i class="${DontForget.ID}-header-button fas fa-sticky-note" data-tooltip="${game.i18n.localize('DONT-FORGET.button-title')}" data-tooltip-direction="LEFT"></i>`
+    );
+
+    // Add left-click handler (open main window)
+    $reminderButton.on('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      DontForget.reminderApp.render(true);
+    });
+
+    // Add right-click handler (immediately open Add Reminder dialog)
+    $reminderButton.on('contextmenu', async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      await ReminderApp.createReminder(event, event.target);
+    });
+
+    // Insert at the end of the header
+    $header.append($reminderButton);
+  }
 });
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
-class ReminderConfig extends HandlebarsApplicationMixin(ApplicationV2) {
+
+/**
+ * Main application for managing reminders
+ */
+class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
-    id: `${Reminder.ID}`,
-    tag: 'form',
-    form: {
-      handler: ReminderConfig.formHandler,
-      closeOnSubmit: false, // do not close when submitted
-      submitOnChange: true, // submit when any input changes
-      submitOnClose: true // submit on close
-    },
+    id: `${DontForget.ID}-app`,
+    tag: 'div',
     actions: {
-      'create': ReminderConfig.create,
-      'delete': ReminderConfig.delete,
-      'edit': ReminderConfig.edit,
-      'delete-completed': ReminderConfig.deleteCompleted
+      'create': ReminderApp.createReminder,
+      'delete': ReminderApp.deleteReminder,
+      'edit': ReminderApp.editReminder,
+      'delete-completed': ReminderApp.deleteCompletedReminders
     },
     position: {
       height: 'auto',
-      width: 'auto'
+      width: 600
     },
     window: {
-      icon: 'fas fa-note-sticky',
-      resizable: false
+      icon: 'fas fa-sticky-note',
+      resizable: true
     },
-    classes: [`${Reminder.ID}`]
+    classes: [DontForget.ID]
   };
 
   get title() {
-    if (game.users.get(game.userId).isGM) {
-      return `${Reminder.TITLE} ${game.i18n.localize('DONT-FORGET.window-title')} (${game.i18n.localize('DONT-FORGET.dungeon-master')})`;
-    } else {
-      return `${Reminder.TITLE} ${game.i18n.localize('DONT-FORGET.window-title')} (${game.user.name})`;
-    }
+    return game.user.isGM ? `${DontForget.TITLE} - ${game.i18n.localize('DONT-FORGET.dungeon-master')}` : `${DontForget.TITLE} - ${game.user.name}`;
   }
 
+  /**
+   * Template parts for the application
+   */
   static PARTS = {
-    form: {
-      template: Reminder.TEMPLATES.DONTFORGETPOPUP
+    main: {
+      template: DontForget.TEMPLATES.REMINDER_LIST
     }
   };
 
-  _prepareContext(options) {
-    const reminders = ReminderData.getReminders(game.userId);
-    console.log('REMINDER DATA PREPARE CONTEXT: ', ReminderData.getRemindersForUser(game.userId));
+  /**
+   * Add event listeners after rendering
+   */
+  _onRender(context, options) {
+    super._onRender(context, options);
+
+    // Add click handlers for checkboxes
+    this.element.querySelectorAll('.reminder-checkbox').forEach((checkbox) => {
+      checkbox.addEventListener('change', this._onCheckboxChange.bind(this));
+    });
+  }
+
+  /**
+   * Handle checkbox changes immediately
+   */
+  async _onCheckboxChange(event) {
+    const checkbox = event.target;
+    const reminderRow = checkbox.closest('[data-reminder-id]');
+    if (!reminderRow) return;
+
+    const reminderId = reminderRow.dataset.reminderId;
+    const isDone = checkbox.checked;
+
+    await ReminderManager.updateReminder(reminderId, { isDone });
+
+    // Update the row's CSS class immediately
+    if (isDone) {
+      reminderRow.classList.add('completed');
+    } else {
+      reminderRow.classList.remove('completed');
+    }
+
+    // Update the text span as well
+    const reminderText = reminderRow.querySelector('.reminder-text');
+    if (reminderText) {
+      if (isDone) {
+        reminderText.classList.add('completed');
+      } else {
+        reminderText.classList.remove('completed');
+      }
+    }
+  }
+
+  /**
+   * Prepare context data for rendering the template
+   */
+  _prepareContext() {
+    const rawReminders = ReminderManager.getReminders(game.user.id);
+
+    // Process and enhance reminder data
+    const processedReminders = Object.values(rawReminders).map((reminder) => {
+      const user = game.users.get(reminder.userId);
+
+      return {
+        ...reminder,
+        creatorName: user ? user.name : '',
+        createdTime: reminder.createdAt ? foundry.utils.timeSince(reminder.createdAt) : '',
+        completed: reminder.isDone
+      };
+    });
+
+    // Sort reminders: completed at bottom, then by user, then by creation time
+    const sortedReminders = processedReminders.sort((a, b) => {
+      // First sort by completion status
+      if (a.isDone !== b.isDone) {
+        return a.isDone ? 1 : -1;
+      }
+
+      // If completion status is the same, sort by user (for GM view)
+      if (game.user.isGM && a.userId !== b.userId) {
+        return a.creatorName.localeCompare(b.creatorName);
+      }
+
+      // Then by creation time (newest first)
+      if (a.createdAt && b.createdAt) {
+        return b.createdAt - a.createdAt;
+      }
+
+      // Default to sorting by ID to ensure stable order
+      return a.id.localeCompare(b.id);
+    });
+
     return {
-      reminders: reminders // Now contains userId for each reminder.
+      reminders: sortedReminders,
+      isGM: game.user.isGM,
+      showGMColumns: game.user.isGM,
+      hasReminders: sortedReminders.length > 0
     };
   }
 
-  static async formHandler(event, form, formData) {
-    // const expandedData = foundry.utils.expandObject(formData.object);
-    console.log(formData, formData.object);
-    await ReminderData.updateUserReminders(game.userId, formData.object);
+  /**
+   * Create a new reminder using DialogV2
+   */
+  static async createReminder(event, target) {
+    const placeholderText = game.i18n.localize('DONT-FORGET.reminder-placeholder');
+
+    // Prepare template data
+    const templateData = {
+      isGM: game.user.isGM,
+      placeholderText: placeholderText,
+      labels: {
+        reminderText: game.i18n.localize('DONT-FORGET.reminder-text'),
+        reminderOwner: game.i18n.localize('DONT-FORGET.reminder-owner')
+      },
+      users: []
+    };
+
+    // Add user options for GMs
+    if (game.user.isGM) {
+      templateData.users = game.users.contents.map((user) => ({
+        id: user.id,
+        name: user.name,
+        selected: user.id === game.user.id
+      }));
+    }
+
+    // Render the form template
+    const content = await renderTemplate(DontForget.TEMPLATES.CREATE_REMINDER_FORM, templateData);
+
+    const result = await DialogV2.prompt({
+      window: {
+        title: game.i18n.localize('DONT-FORGET.create-reminder-title'),
+        icon: 'fas fa-plus'
+      },
+      content: content,
+      ok: {
+        label: game.i18n.localize('DONT-FORGET.create'),
+        callback: (event, button, dialog) => {
+          const reminderText = button.form.elements.reminderText.value.trim();
+          const reminderOwner = button.form.elements.reminderOwner?.value;
+
+          return {
+            reminderText: reminderText || placeholderText,
+            reminderOwner: reminderOwner
+          };
+        }
+      },
+      modal: true,
+      rejectClose: false,
+      classes: [DontForget.ID, 'create-reminder-dialog']
+    });
+
+    if (result && result.reminderText) {
+      const reminderData = {
+        label: result.reminderText
+      };
+
+      const ownerId = game.user.isGM && result.reminderOwner ? result.reminderOwner : game.user.id;
+
+      await ReminderManager.createReminder(ownerId, reminderData);
+      ui.notifications.info(game.i18n.localize('DONT-FORGET.reminder-created'));
+
+      // Get the app instance and render it
+      if (DontForget.reminderApp && DontForget.reminderApp.rendered) {
+        DontForget.reminderApp.render();
+      }
+    }
   }
 
-  static async create(event, target) {
-    console.log(`CREATE: ${this}`);
-
-    // Find the closest parent with the attribute 'data-reminder-id' and retrieve its value
+  /**
+   * Delete a reminder
+   */
+  static async deleteReminder(event, target) {
     const reminderElement = target.closest('[data-reminder-id]');
+    if (!reminderElement) return;
 
-    // console.log(`${Reminder.TITLE} Button Click: `, { this: this, reminderID, userId });
+    const reminderId = reminderElement.dataset.reminderId;
 
-    await ReminderData.createReminder(game.userId);
-    this.render();
-  }
+    // Get all reminders and find the specific one
+    const allReminders = ReminderManager.getReminders(game.user.id);
+    const reminder = allReminders[reminderId];
 
-  static async delete(event, target) {
-    console.log(`DELETE: ${{ target }}`);
+    if (!reminder) {
+      ui.notifications.error('Reminder not found');
+      return;
+    }
 
-    // Find the closest parent with the attribute 'data-reminder-id' and retrieve its value
-    const reminderElement = target.closest('[data-reminder-id]');
-    const reminderID = reminderElement ? reminderElement.getAttribute('data-reminder-id') : null;
-
-    // Get the userId associated with the reminder
-    const userId = reminderElement ? reminderElement.getAttribute('data-user-id') : null;
-
-    console.log(`${Reminder.TITLE} Button Click: `, { this: this, reminderID, userId });
     const confirmed = await DialogV2.confirm({
       window: {
         title: game.i18n.localize('DONT-FORGET.confirms.deleteConfirm.Title')
       },
       content: game.i18n.localize('DONT-FORGET.confirms.deleteConfirm.Content'),
-      modal: false
+      modal: true
     });
 
-    if (confirmed && reminderID && userId) {
-      // Perform the deletion
-      const result = await ReminderData.deleteReminder(reminderID, userId);
-      if (result) {
-        console.log(`Reminder ${reminderID} deleted successfully.`);
-        this.render(); // Re-render the reminders
-      } else {
-        console.error(`Failed to delete reminder ${reminderID}.`);
-      }
+    if (confirmed) {
+      await ReminderManager.deleteReminder(reminderId, reminder.userId);
+      this.render();
     }
   }
 
-  static edit(event, target) {
-    if (target.closest('.dont-forget-edit')) {
-      const listItem = target.closest('.dont-forget-list-item');
-      const inputField = listItem.querySelector('.dont-forget-input');
+  /**
+   * Edit an existing reminder using DialogV2
+   */
+  static async editReminder(event, target) {
+    const reminderElement = target.closest('[data-reminder-id]');
+    if (!reminderElement) return;
 
-      // Toggle the readonly property
-      inputField.readOnly = !inputField.readOnly; // Fixed 'readonly' to 'ReadOnly'
+    const reminderId = reminderElement.dataset.reminderId;
+    const allReminders = ReminderManager.getReminders(game.user.id);
+    const reminder = allReminders[reminderId];
+
+    if (!reminder) {
+      ui.notifications.error('Reminder not found');
+      return;
     }
-  }
 
-  static async deleteCompleted(event, target) {
-    if (target.closest('.dont-forget-delete-completed')) {
-      const completedReminders = Array.from(document.querySelectorAll('.dont-forget-checkbox:checked'));
+    if (game.user.id !== reminder.userId && !game.user.isGM) {
+      ui.notifications.error("You don't have permission to edit this reminder");
+      return;
+    }
 
-      if (completedReminders.length === 0) {
-        console.log('No completed reminders to delete.');
-        return;
-      }
+    // Prepare template data
+    const templateData = {
+      isGM: game.user.isGM,
+      editMode: true,
+      initialText: reminder.label,
+      labels: {
+        reminderText: game.i18n.localize('DONT-FORGET.reminder-text'),
+        reminderOwner: game.i18n.localize('DONT-FORGET.reminder-owner')
+      },
+      users: []
+    };
 
-      // Confirm deletion
-      const confirmed = await DialogV2.confirm({
-        window: {
-          title: game.i18n.localize('DONT-FORGET.confirms.deleteCompletedConfirm.Title')
-        },
-        content: game.i18n.localize('DONT-FORGET.confirms.deleteCompletedConfirm.Content'),
-        modal: false
-      });
-      if (!confirmed) return;
+    // Add user options for GMs
+    if (game.user.isGM) {
+      templateData.users = game.users.contents.map((user) => ({
+        id: user.id,
+        name: user.name,
+        selected: user.id === reminder.userId
+      }));
+    }
 
-      completedReminders.forEach(async (checkbox) => {
-        const listItem = checkbox.closest('.dont-forget-list-item');
-        const reminderID = listItem.dataset.reminderId;
-        const userId = listItem.dataset.userId;
+    // Render the form template
+    const content = await renderTemplate(DontForget.TEMPLATES.CREATE_REMINDER_FORM, templateData);
 
-        // Call your deleteReminder function
-        const result = await ReminderData.deleteReminder(reminderID, userId);
-        if (result) {
-          console.log(`Reminders ${completedReminders} deleted successfully.`);
-          this.render();
-        } else {
-          console.error(`Failed to delete reminders: ${completedReminders}`);
+    const result = await DialogV2.prompt({
+      window: {
+        title: game.i18n.localize('DONT-FORGET.edit-reminder'),
+        icon: 'fas fa-edit'
+      },
+      content: content,
+      ok: {
+        label: game.i18n.localize('DONT-FORGET.save'),
+        callback: (event, button, dialog) => {
+          const reminderText = button.form.elements.reminderText.value.trim();
+          const reminderOwner = button.form.elements.reminderOwner?.value;
+
+          return {
+            reminderText: reminderText,
+            reminderOwner: reminderOwner
+          };
         }
-      });
+      },
+      modal: true,
+      rejectClose: false,
+      classes: [DontForget.ID, 'edit-reminder-dialog']
+    });
+
+    if (result && result.reminderText) {
+      const updateData = {
+        label: result.reminderText
+      };
+
+      if (game.user.isGM && result.reminderOwner && result.reminderOwner !== reminder.userId) {
+        const newOwnerId = result.reminderOwner;
+        await ReminderManager.deleteReminder(reminderId, reminder.userId);
+        const newReminderData = {
+          label: result.reminderText,
+          isDone: reminder.isDone
+        };
+        await ReminderManager.createReminder(newOwnerId, newReminderData);
+      } else {
+        await ReminderManager.updateReminder(reminderId, updateData);
+      }
+
+      ui.notifications.info('Reminder updated successfully!');
+      this.render();
+    }
+  }
+
+  /**
+   * Delete all completed reminders
+   */
+  static async deleteCompletedReminders() {
+    const reminders = ReminderManager.getReminders(game.user.id);
+    const completedReminders = Object.values(reminders).filter((r) => r.isDone);
+
+    if (completedReminders.length === 0) {
+      ui.notifications.info(game.i18n.localize('DONT-FORGET.no-completed-reminders'));
+      return;
+    }
+
+    const confirmed = await DialogV2.confirm({
+      window: {
+        title: game.i18n.localize('DONT-FORGET.confirms.deleteCompletedConfirm.Title')
+      },
+      content: game.i18n.localize('DONT-FORGET.confirms.deleteCompletedConfirm.Content'),
+      modal: true
+    });
+
+    if (confirmed) {
+      for (const reminder of completedReminders) {
+        await ReminderManager.deleteReminder(reminder.id, reminder.userId);
+      }
+      this.render();
     }
   }
 }

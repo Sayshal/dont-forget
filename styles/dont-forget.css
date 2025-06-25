@@ -1,81 +1,212 @@
-/* Main container for 'Don't Forget', ensures no unwanted padding or margin - Special thanks to Lukas for CSS fixes :) */
+/* stylelint-disable declaration-property-value-keyword-no-deprecated */
+
+/* Don't Forget Module Styles */
 .dont-forget {
-  width: 50vw;
-  max-width: 750px;
-  display: initial;
+  /* Dialog styles - proper block layout */
+  &.create-reminder-dialog,
+  &.edit-reminder-dialog {
+    .dialog-content {
+      padding: 1rem;
+      min-width: 320px;
+    }
+
+    .reminder-form-field {
+      display: block;
+      margin-bottom: 1rem;
+      width: 100%;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    label {
+      display: block;
+      width: 100%;
+      margin-bottom: 0.5rem;
+      font-weight: bold;
+      font-size: 0.9rem;
+      line-height: 1.2;
+    }
+
+    input[type='text'],
+    textarea,
+    select {
+      display: block;
+      width: 100%;
+      font-family: inherit;
+      box-sizing: border-box;
+      margin: 0;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+  }
+
+  /* Main application window - ensure full height usage */
+  &:not(.create-reminder-dialog, .edit-reminder-dialog) {
+    .window-content {
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+  }
+
+  /* Table container - full width and height */
+  .reminder-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+
+    .reminder-table-container {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+
+    /* Reminder table - fill container */
+    .reminder-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      table-layout: auto;
+      margin: 0;
+
+      th,
+      td {
+        padding: 0.75rem 0.5rem;
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      th {
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+        white-space: nowrap;
+      }
+
+      /* Column sizing - let them size naturally but with minimums */
+      .col-status {
+        width: 60px;
+        text-align: center;
+      }
+
+      .col-reminder {
+        min-width: 200px;
+        max-width: none;
+        word-wrap: break-word;
+
+        .reminder-text {
+          word-break: break-word;
+          hyphens: auto;
+        }
+      }
+
+      .col-creator {
+        min-width: 100px;
+        white-space: nowrap;
+      }
+
+      .col-created {
+        min-width: 80px;
+        white-space: nowrap;
+      }
+
+      .col-actions {
+        width: 80px;
+        text-align: center;
+      }
+    }
+
+    /* Reminder rows - fix hover contrast */
+    .reminder-row {
+      transition: all 0.2s ease;
+
+      &.completed {
+        opacity: 0.7;
+
+        .reminder-text {
+          text-decoration: line-through;
+        }
+      }
+    }
+
+    /* Action buttons */
+    .reminder-actions {
+      display: flex;
+      gap: 0.25rem;
+      justify-content: center;
+
+      .reminder-edit,
+      .reminder-delete {
+        padding: 0.25rem;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        background: none;
+        transition: color 0.2s ease;
+        font-size: 0.9rem;
+
+        &:hover {
+          box-shadow: none;
+          outline: none;
+        }
+      }
+    }
+
+    /* Empty state */
+    .reminder-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem 0;
+      font-style: italic;
+      text-align: center;
+    }
+
+    /* Footer area */
+    .reminder-footer {
+      display: flex;
+      justify-content: center;
+      margin-top: auto;
+      gap: 0.5rem;
+
+      .reminder-create,
+      .reminder-delete-completed {
+        width: auto;
+        white-space: nowrap;
+      }
+    }
+  }
 }
 
-/* Each item in the 'Don't Forget' list, uses flexbox for horizontal alignment */
-.dont-forget-list-item {
+/* Make sure the h3 header is flexbox to support margin-left: auto */
+#players h3[aria-label='Players'] {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 5px 0;
-  gap: 10px;
-  box-sizing: border-box;
-}
+  gap: 0.25rem;
 
-/* Checkbox styling: Natural size with no extra margins */
-.dont-forget-checkbox {
-  margin: 0;
-  padding: 0;
-}
+  /* Header button styling */
+  .dont-forget-header-button {
+    margin-left: auto;
+    color: var(--user-color);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
 
-/* Input field: Stretches to take up remaining space */
-.dont-forget-input {
-  flex-grow: 1;
-  padding: 5px;
-  box-sizing: border-box;
-}
-
-/* Edit and Delete Buttons: Common styles for the edit and delete buttons */
-.dont-forget-edit,
-.dont-forget-delete {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: transparent !important;
-  border: none !important;
-  padding: 2px;
-  margin: 0;
-  height: 30px;
-  width: 30px;
-  cursor: pointer;
-}
-
-/* Container for Delete Completed and Create buttons, uses flexbox for alignment */
-.dont-forget-buttons {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  margin-top: 10px;
-}
-
-/* Ensure consistent size for Delete Completed and Create buttons */
-.dont-forget-delete-completed,
-.dont-forget-create {
-  height: 40px;
-  margin: 0 5px;
-}
-
-/* Journal icon button styling for consistency and interactivity */
-.dont-forget-journal-icon-button {
-  line-height: normal;
-  border: 0;
-  align-self: center;
-  height: auto;
-  display: inline-block;
-}
-
-/* Styling for icon inside journal icon button */
-.dont-forget-journal-icon-button > i {
-  margin-right: 0;
-}
-
-/* Hover and focus effects for journal icon buttons */
-.dont-forget-journal-icon-button:hover,
-.dont-forget-journal-icon-button:focus {
-  box-shadow: none;
-  text-shadow: 0 0 5px red;
+    &:hover {
+      text-shadow: 0 0 4px var(--color-shadow-highlight);
+      transform: scale(1.1);
+    }
+  }
 }
