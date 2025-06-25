@@ -25,13 +25,13 @@
         </thead>
         <tbody>
           {{#each reminders}}
-            <tr class="reminder-row {{#if completed}}completed{{/if}}" data-reminder-id="{{id}}">
+            <tr class="reminder-row {{#if isDone}}completed{{/if}}" data-reminder-id="{{id}}">
               <td class="col-status">
-                <input type="checkbox" class="reminder-checkbox" name="{{id}}.isDone" {{#if isDone}}checked{{/if}}
-                  data-dtype="Boolean" data-tooltip="{{localize 'DONT-FORGET.mark-done'}}">
+                <input type="checkbox" class="reminder-checkbox" {{#if isDone}}checked{{/if}}
+                  data-tooltip="{{localize 'DONT-FORGET.mark-done'}}">
               </td>
               <td class="col-reminder">
-                <span class="reminder-text {{#if completed}}completed{{/if}}">{{label}}</span>
+                <span class="reminder-text {{#if isDone}}completed{{/if}}">{{label}}</span>
               </td>
               {{#if ../isGM}}
                 <td class="col-creator">

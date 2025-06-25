@@ -1,42 +1,47 @@
+/* stylelint-disable declaration-property-value-keyword-no-deprecated */
+
 /* Don't Forget Module Styles */
 .dont-forget {
-  /* Dialog styles - prevent label wrapping and auto-size */
+  /* Dialog styles - proper block layout */
   &.create-reminder-dialog,
   &.edit-reminder-dialog {
     .dialog-content {
       padding: 1rem;
-      min-width: 300px;
+      min-width: 320px;
+    }
+
+    .reminder-form-field {
+      display: block;
+      margin-bottom: 1rem;
+      width: 100%;
+
+      &:last-child {
+        margin-bottom: 0;
+      }
     }
 
     label {
       display: block;
+      width: 100%;
       margin-bottom: 0.5rem;
       font-weight: bold;
-      white-space: nowrap;
+      font-size: 0.9rem;
+      line-height: 1.2;
     }
 
     input[type='text'],
     textarea,
     select {
+      display: block;
       width: 100%;
-      padding: 0.5rem;
-      border-radius: 3px;
       font-family: inherit;
+      box-sizing: border-box;
+      margin: 0;
     }
 
     textarea {
-      min-height: 80px;
+      min-height: 100px;
       resize: vertical;
-      font-family: inherit;
-      line-height: 1.4;
-    }
-
-    .form-group {
-      margin-bottom: 1rem;
-
-      &:last-child {
-        margin-bottom: 0;
-      }
     }
   }
 

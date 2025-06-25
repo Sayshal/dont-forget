@@ -14,7 +14,6 @@ export class DontForget {
 
   static TEMPLATES = {
     REMINDER_LIST: `modules/${this.ID}/templates/reminder-list.hbs`
-    // Removed CREATE_REMINDER template
   };
 
   static SETTINGS = {
@@ -80,13 +79,7 @@ const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applicat
 class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static DEFAULT_OPTIONS = {
     id: `${DontForget.ID}-app`,
-    tag: 'form',
-    form: {
-      handler: ReminderApp.formHandler,
-      closeOnSubmit: false,
-      submitOnChange: true,
-      submitOnClose: true
-    },
+    tag: 'div',
     actions: {
       'create': ReminderApp.createReminder,
       'delete': ReminderApp.deleteReminder,
@@ -112,10 +105,53 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    * Template parts for the application
    */
   static PARTS = {
-    form: {
+    main: {
       template: DontForget.TEMPLATES.REMINDER_LIST
     }
   };
+
+  /**
+   * Add event listeners after rendering
+   */
+  _onRender(context, options) {
+    super._onRender(context, options);
+
+    // Add click handlers for checkboxes
+    this.element.querySelectorAll('.reminder-checkbox').forEach((checkbox) => {
+      checkbox.addEventListener('change', this._onCheckboxChange.bind(this));
+    });
+  }
+
+  /**
+   * Handle checkbox changes immediately
+   */
+  async _onCheckboxChange(event) {
+    const checkbox = event.target;
+    const reminderRow = checkbox.closest('[data-reminder-id]');
+    if (!reminderRow) return;
+
+    const reminderId = reminderRow.dataset.reminderId;
+    const isDone = checkbox.checked;
+
+    await ReminderManager.updateReminder(reminderId, { isDone });
+
+    // Update the row's CSS class immediately
+    if (isDone) {
+      reminderRow.classList.add('completed');
+    } else {
+      reminderRow.classList.remove('completed');
+    }
+
+    // Update the text span as well
+    const reminderText = reminderRow.querySelector('.reminder-text');
+    if (reminderText) {
+      if (isDone) {
+        reminderText.classList.add('completed');
+      } else {
+        reminderText.classList.remove('completed');
+      }
+    }
+  }
 
   /**
    * Prepare context data for rendering the template
@@ -159,38 +195,9 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     return {
       reminders: sortedReminders,
       isGM: game.user.isGM,
-      showGMColumns: game.user.isGM, // Added this for template
+      showGMColumns: game.user.isGM,
       hasReminders: sortedReminders.length > 0
     };
-  }
-
-  /**
-   * Handle form submission with proper data parsing
-   */
-  static async formHandler(event, form, formData) {
-    if (!formData.object) return;
-
-    // Parse the form data to reconstruct reminder objects
-    const reminderUpdates = {};
-
-    for (const [key, value] of Object.entries(formData.object)) {
-      // Parse keys like "reminderId.property" into structured data
-      const parts = key.split('.');
-      if (parts.length === 2) {
-        const [reminderId, property] = parts;
-
-        if (!reminderUpdates[reminderId]) {
-          reminderUpdates[reminderId] = {};
-        }
-
-        reminderUpdates[reminderId][property] = value;
-      }
-    }
-
-    // Update each reminder
-    for (const [reminderId, updateData] of Object.entries(reminderUpdates)) {
-      await ReminderManager.updateReminder(reminderId, updateData);
-    }
   }
 
   /**
@@ -209,27 +216,31 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     const content = `
-    <form id="create-reminder-form">
-      <div class="form-group">
-        <label for="reminder-text">${game.i18n.localize('DONT-FORGET.reminder-text')}</label>
-        <textarea id="reminder-text" name="reminderText" placeholder="${game.i18n.localize('DONT-FORGET.new-reminder-text')}" autofocus></textarea>
-      </div>
-      ${
-        game.user.isGM ?
-          `
-        <div class="form-group">
+      <form id="create-reminder-form">
+        <div class="reminder-form-field">
+          <label for="reminder-text">${game.i18n.localize('DONT-FORGET.reminder-text')}</label>
+          <textarea
+            id="reminder-text"
+            name="reminderText"
+            placeholder="${game.i18n.localize('DONT-FORGET.reminder-placeholder')}"
+            autofocus></textarea>
+        </div>
+        ${
+          game.user.isGM ?
+            `
+        <div class="reminder-form-field">
           <label for="reminder-owner">${game.i18n.localize('DONT-FORGET.reminder-owner')}</label>
           <select id="reminder-owner" name="reminderOwner">
             ${userOptions}
           </select>
         </div>
-      `
-        : ''
-      }
-    </form>
-  `;
+        `
+          : ''
+        }
+      </form>
+    `;
 
-    const result = await foundry.applications.api.DialogV2.prompt({
+    const result = await DialogV2.prompt({
       window: {
         title: game.i18n.localize('DONT-FORGET.create-reminder-title'),
         icon: 'fas fa-plus'
@@ -238,7 +249,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ok: {
         label: game.i18n.localize('DONT-FORGET.create'),
         callback: (event, button, dialog) => {
-          const reminderText = button.form.elements.reminderText.value;
+          const reminderText = button.form.elements.reminderText.value.trim();
           const reminderOwner = button.form.elements.reminderOwner?.value;
 
           return {
@@ -252,9 +263,9 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       classes: [DontForget.ID, 'create-reminder-dialog']
     });
 
-    if (result) {
+    if (result && result.reminderText) {
       const reminderData = {
-        label: result.reminderText || game.i18n.localize('DONT-FORGET.new-reminder-text')
+        label: result.reminderText
       };
 
       const ownerId = game.user.isGM && result.reminderOwner ? result.reminderOwner : game.user.id;
@@ -288,7 +299,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         title: game.i18n.localize('DONT-FORGET.confirms.deleteConfirm.Title')
       },
       content: game.i18n.localize('DONT-FORGET.confirms.deleteConfirm.Content'),
-      modal: false
+      modal: true
     });
 
     if (confirmed) {
@@ -330,27 +341,30 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     const content = `
-    <form id="edit-reminder-form">
-      <div class="form-group">
-        <label for="reminder-text">${game.i18n.localize('DONT-FORGET.reminder-text')}</label>
-        <textarea id="reminder-text" name="reminderText" autofocus>${reminder.label}</textarea>
-      </div>
-      ${
-        game.user.isGM ?
-          `
-        <div class="form-group">
+      <form id="edit-reminder-form">
+        <div class="reminder-form-field">
+          <label for="reminder-text">${game.i18n.localize('DONT-FORGET.reminder-text')}</label>
+          <textarea
+            id="reminder-text"
+            name="reminderText"
+            autofocus>${reminder.label}</textarea>
+        </div>
+        ${
+          game.user.isGM ?
+            `
+        <div class="reminder-form-field">
           <label for="reminder-owner">${game.i18n.localize('DONT-FORGET.reminder-owner')}</label>
           <select id="reminder-owner" name="reminderOwner">
             ${userOptions}
           </select>
         </div>
-      `
-        : ''
-      }
-    </form>
-  `;
+        `
+          : ''
+        }
+      </form>
+    `;
 
-    const result = await foundry.applications.api.DialogV2.prompt({
+    const result = await DialogV2.prompt({
       window: {
         title: game.i18n.localize('DONT-FORGET.edit-reminder'),
         icon: 'fas fa-edit'
@@ -359,7 +373,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ok: {
         label: game.i18n.localize('DONT-FORGET.save'),
         callback: (event, button, dialog) => {
-          const reminderText = button.form.elements.reminderText.value;
+          const reminderText = button.form.elements.reminderText.value.trim();
           const reminderOwner = button.form.elements.reminderOwner?.value;
 
           return {
@@ -373,7 +387,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       classes: [DontForget.ID, 'edit-reminder-dialog']
     });
 
-    if (result) {
+    if (result && result.reminderText) {
       const updateData = {
         label: result.reminderText
       };
@@ -412,7 +426,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         title: game.i18n.localize('DONT-FORGET.confirms.deleteCompletedConfirm.Title')
       },
       content: game.i18n.localize('DONT-FORGET.confirms.deleteCompletedConfirm.Content'),
-      modal: false
+      modal: true
     });
 
     if (confirmed) {
