@@ -1,5 +1,5 @@
 <div class="reminder-container">
-  {{#if reminders.length}}
+  {{#if hasReminders}}
     <div class="reminder-table-container">
       <table class="reminder-table">
         <thead>
@@ -10,7 +10,7 @@
             <th class="col-reminder" data-tooltip="{{localize 'DONT-FORGET.table-headers.reminder-tooltip'}}">
               {{localize 'DONT-FORGET.table-headers.reminder'}}
             </th>
-            {{#if showGMColumns}}
+            {{#if isGM}}
               <th class="col-creator" data-tooltip="{{localize 'DONT-FORGET.table-headers.creator-tooltip'}}">
                 {{localize 'DONT-FORGET.table-headers.creator'}}
               </th>
@@ -27,17 +27,13 @@
           {{#each reminders}}
             <tr class="reminder-row {{#if completed}}completed{{/if}}" data-reminder-id="{{id}}">
               <td class="col-status">
-                <input type="checkbox" class="reminder-checkbox" name="reminders.{{id}}.completed"
-                  {{#if completed}}checked{{/if}} data-tooltip="{{localize 'DONT-FORGET.mark-done'}}">
+                <input type="checkbox" class="reminder-checkbox" name="{{id}}.isDone" {{#if isDone}}checked{{/if}}
+                  data-dtype="Boolean" data-tooltip="{{localize 'DONT-FORGET.mark-done'}}">
               </td>
               <td class="col-reminder">
-                {{#if completed}}
-                  <span class="reminder-text completed">{{label}}</span>
-                {{else}}
-                  <span class="reminder-text">{{label}}</span>
-                {{/if}}
+                <span class="reminder-text {{#if completed}}completed{{/if}}">{{label}}</span>
               </td>
-              {{#if ../showGMColumns}}
+              {{#if ../isGM}}
                 <td class="col-creator">
                   <span class="creator-name">{{creatorName}}</span>
                 </td>

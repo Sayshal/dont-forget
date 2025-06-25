@@ -74,8 +74,6 @@ Hooks.on('renderPlayerList', (app, html, data) => {
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
 
-// DELETE THE ENTIRE CreateReminderDialog CLASS - IT'S NO LONGER NEEDED
-
 /**
  * Main application for managing reminders
  */
@@ -97,7 +95,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     },
     position: {
       height: 'auto',
-      width: 700
+      width: 600
     },
     window: {
       icon: 'fas fa-sticky-note',
@@ -131,8 +129,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       return {
         ...reminder,
-        creatorName: user ? user.name : 'Unknown User',
-        timeDisplay: reminder.createdAt ? foundry.utils.timeSince(reminder.createdAt) : '',
+        creatorName: user ? user.name : '',
+        createdTime: reminder.createdAt ? foundry.utils.timeSince(reminder.createdAt) : '',
         completed: reminder.isDone
       };
     });
@@ -161,6 +159,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     return {
       reminders: sortedReminders,
       isGM: game.user.isGM,
+      showGMColumns: game.user.isGM, // Added this for template
       hasReminders: sortedReminders.length > 0
     };
   }
@@ -213,7 +212,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     <form id="create-reminder-form">
       <div class="form-group">
         <label for="reminder-text">${game.i18n.localize('DONT-FORGET.reminder-text')}</label>
-        <input type="text" id="reminder-text" name="reminderText" value="${game.i18n.localize('DONT-FORGET.new-reminder-text')}" autofocus />
+        <input type="text" id="reminder-text" name="reminderText" placeholder="${game.i18n.localize('DONT-FORGET.new-reminder-text')}" autofocus />
       </div>
       ${
         game.user.isGM ?
@@ -250,7 +249,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         }
       },
       modal: true,
-      rejectClose: false
+      rejectClose: false,
+      classes: [DontForget.ID, 'create-reminder-dialog']
     });
 
     // If we got valid form data back
@@ -280,9 +280,15 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (!reminderElement) return;
 
     const reminderId = reminderElement.dataset.reminderId;
-    const userId = reminderElement.dataset.userId;
 
-    if (!reminderId || !userId) return;
+    // Get all reminders and find the specific one
+    const allReminders = ReminderManager.getReminders(game.user.id);
+    const reminder = allReminders[reminderId];
+
+    if (!reminder) {
+      ui.notifications.error('Reminder not found');
+      return;
+    }
 
     const confirmed = await DialogV2.confirm({
       window: {
@@ -293,7 +299,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     });
 
     if (confirmed) {
-      await ReminderManager.deleteReminder(reminderId, userId);
+      await ReminderManager.deleteReminder(reminderId, reminder.userId);
       this.render();
     }
   }
@@ -337,7 +343,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     <form id="edit-reminder-form">
       <div class="form-group">
         <label for="reminder-text">${game.i18n.localize('DONT-FORGET.reminder-text')}</label>
-        <input type="text" id="reminder-text" name="reminderText" value="${reminder.label}" autofocus />
+        <input type="text" id="reminder-text" name="reminderText" placeholder="${reminder.label}" autofocus />
       </div>
       ${
         game.user.isGM ?
@@ -374,7 +380,9 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         }
       },
       modal: true,
-      rejectClose: false
+      rejectClose: false,
+      classes: [DontForget.ID, 'edit-reminder-dialog'],
+      position: { width: 'auto', height: 'auto' }
     });
 
     // If we got valid form data back
