@@ -1,289 +1,234 @@
-/* Main container styling */
+/* Don't Forget Module Styles */
 .dont-forget {
-  color: var(--color-text-dark-primary);
-  font-family: var(--font-primary);
+  /* Dialog styles - minimal, let defaults handle colors */
+  .create-reminder-dialog,
+  .edit-reminder-dialog {
+    padding: 1rem;
+
+    .form-group {
+      margin-bottom: 1rem;
+
+      label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: bold;
+      }
+
+      input[type='text'],
+      select {
+        width: 100%;
+        padding: 0.5rem;
+        border-radius: 3px;
+        font-family: inherit;
+
+        &:focus {
+          outline: none;
+          border-color: var(--color-border-highlight);
+          box-shadow: 0 0 5px var(--color-shadow-highlight);
+        }
+      }
+    }
+  }
+
+  /* Table container */
+  .reminder-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 0;
+
+    .reminder-table-container {
+      flex: 1;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+      width: 100%;
+    }
+
+    /* Reminder table */
+    .reminder-table {
+      width: auto;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+
+      th,
+      td {
+        padding: 0.75rem 0.5rem;
+        border-bottom: 1px solid var(--color-border-light-tertiary);
+        text-align: left;
+        vertical-align: middle;
+      }
+
+      th {
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+        z-index: 1;
+      }
+
+      /* Column sizing */
+      .col-status {
+        width: 60px;
+        text-align: center;
+      }
+
+      .col-reminder {
+        width: auto;
+        min-width: 200px;
+      }
+
+      .col-creator {
+        width: 120px;
+      }
+
+      .col-created {
+        width: 100px;
+      }
+
+      .col-actions {
+        width: 80px;
+        text-align: center;
+      }
+    }
+
+    /* Reminder rows */
+    .reminder-row {
+      transition: background-color 0.2s ease;
+
+      &:hover {
+        background-color: var(--color-border-light-highlight);
+      }
+
+      &.completed {
+        opacity: 0.7;
+
+        .reminder-text {
+          text-decoration: line-through;
+        }
+      }
+    }
+
+    /* Reminder text styling */
+    .reminder-text {
+      font-size: inherit;
+      line-height: 1.4;
+    }
+
+    /* Checkbox styling */
+    .reminder-checkbox {
+      cursor: pointer;
+      transform: scale(1.1);
+    }
+
+    /* Creator and time styling */
+    .creator-name {
+      font-weight: 500;
+    }
+
+    .created-time {
+      font-size: 0.85rem;
+    }
+
+    /* Action buttons */
+    .reminder-actions {
+      display: flex;
+      gap: 0.25rem;
+      justify-content: center;
+
+      .reminder-edit,
+      .reminder-delete {
+        padding: 0.25rem;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        background: none;
+        transition: color 0.2s ease;
+        font-size: 0.9rem;
+
+        &:hover {
+          &.reminder-edit {
+            color: var(--color-text-hyperlink);
+          }
+
+          &.reminder-delete {
+            color: var(--color-level-warning);
+          }
+        }
+      }
+    }
+
+    /* Empty state */
+    .reminder-empty {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+      font-style: italic;
+      text-align: center;
+    }
+
+    /* Footer area */
+    .reminder-footer {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-top: 1px solid var(--color-border-light-tertiary);
+      margin-top: auto;
+
+      .reminder-create,
+      .reminder-delete-completed {
+        padding: 0.5rem 0.75rem;
+        border-radius: 3px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+
+        &:hover {
+          &.reminder-create {
+            background-color: var(--color-button-primary);
+          }
+
+          &.reminder-delete-completed {
+            background-color: var(--color-button-danger);
+          }
+        }
+      }
+    }
+  }
+
+  /* Responsive adjustments */
+  @media (width <= 600px) {
+    .reminder-table {
+      font-size: 0.8rem;
+
+      th,
+      td {
+        padding: 0.5rem 0.25rem;
+      }
+
+      .col-created {
+        display: none;
+      }
+    }
+  }
 }
 
-.window-content .reminder-container {
+/* Make sure the h3 header is flexbox to support margin-left: auto */
+#players h3[aria-label='Players'] {
   display: flex;
-  flex-direction: column;
-  height: 100%;
-  padding: 0;
-}
-
-/* Create reminder dialog styles */
-.create-reminder-dialog {
-  padding: 1rem;
-}
-
-.create-reminder-dialog .form-group {
-  margin-bottom: 1rem;
-}
-
-.create-reminder-dialog label {
-  display: block;
-  margin-bottom: 0.5rem;
-  font-weight: bold;
-  color: var(--color-text-dark-primary);
-}
-
-.create-reminder-dialog input[type='text'],
-.create-reminder-dialog select {
-  width: 100%;
-  padding: 0.5rem;
-  border: 1px solid var(--color-border-dark-tertiary);
-  border-radius: 3px;
-  background-color: var(--color-bg-option);
-  color: var(--color-text-dark-primary);
-  font-family: inherit;
-}
-
-.create-reminder-dialog input[type='text']:focus,
-.create-reminder-dialog select:focus {
-  outline: none;
-  border-color: var(--color-border-highlight);
-  box-shadow: 0 0 5px var(--color-shadow-highlight);
-}
-
-.create-reminder-dialog select {
-  cursor: pointer;
-}
-
-/* Table container */
-.reminder-table-container {
-  flex: 1;
-  overflow-y: auto;
-  margin-bottom: 1rem;
-}
-
-/* Reminder table */
-.reminder-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.9rem;
-}
-
-.reminder-table th,
-.reminder-table td {
-  padding: 0.75rem 0.5rem;
-  border-bottom: 1px solid var(--color-border-light-tertiary);
-  text-align: left;
-  vertical-align: middle;
-}
-
-.reminder-table th {
-  background-color: var(--color-bg-btn);
-  color: var(--color-text-dark-primary);
-  font-weight: bold;
-  position: sticky;
-  top: 0;
-  z-index: 1;
-}
-
-/* Column sizing */
-.col-status {
-  width: 60px;
-  text-align: center;
-}
-
-.col-reminder {
-  width: auto;
-  min-width: 200px;
-}
-
-.col-creator {
-  width: 120px;
-}
-
-.col-created {
-  width: 100px;
-}
-
-.col-actions {
-  width: 80px;
-  text-align: center;
-}
-
-/* Reminder rows */
-.reminder-row {
-  transition: background-color 0.2s ease;
-}
-
-.reminder-row:hover {
-  background-color: var(--color-border-light-highlight);
-}
-
-.reminder-row.completed {
-  opacity: 0.7;
-}
-
-.reminder-row.completed .reminder-input {
-  color: var(--color-text-dark-secondary);
-  text-decoration: line-through;
-}
-
-/* Checkbox styling */
-.reminder-checkbox {
-  cursor: pointer;
-  transform: scale(1.1);
-}
-
-/* Reminder input */
-.reminder-input {
-  width: 100%;
-  padding: 0.25rem;
-  border: none;
-  border-radius: 3px;
-  color: var(--color-text-dark-primary);
-  background: none;
-  font-size: inherit;
-}
-
-.reminder-input:not([readonly]) {
-  border: 1px solid var(--color-border-highlight);
-  background-color: #ffffff0d;
-  box-shadow: 0 0 3px var(--color-shadow-primary);
-}
-
-.reminder-input:focus {
-  outline: none;
-  box-shadow: 0 0 5px var(--color-shadow-highlight);
-}
-
-/* Creator name styling */
-.creator-name {
-  font-weight: 500;
-  color: var(--color-text-dark-primary);
-}
-
-/* Created time styling */
-.created-time {
-  color: var(--color-text-dark-secondary);
-  font-size: 0.85rem;
-}
-
-/* Action buttons */
-.reminder-actions {
-  display: flex;
+  align-items: center;
   gap: 0.25rem;
-  justify-content: center;
-}
 
-.reminder-edit,
-.reminder-delete {
-  padding: 0.25rem;
-  border: none;
-  border-radius: 3px;
-  color: var(--color-text-dark-secondary);
-  cursor: pointer;
-  background: none;
-  transition: color 0.2s ease;
-  font-size: 0.9rem;
-}
+  /* Header button styling */
+  .dont-forget-header-button {
+    margin-left: auto; /* Push to the right */
+    color: var(--user-color); /* Use user color as requested */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-size: 1rem;
 
-.reminder-edit:hover {
-  color: var(--color-text-hyperlink);
-}
-
-.reminder-delete:hover {
-  color: var(--color-level-warning);
-}
-
-/* Empty state */
-.reminder-empty {
-  flex: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 3rem 1rem;
-  color: var(--color-text-dark-secondary);
-  font-style: italic;
-  text-align: center;
-}
-
-/* Footer area */
-.reminder-footer {
-  display: flex;
-  justify-content: space-between;
-  padding: 0.75rem 0;
-  border-top: 1px solid var(--color-border-light-tertiary);
-  margin-top: auto;
-}
-
-.reminder-create,
-.reminder-delete-completed {
-  padding: 0.5rem 0.75rem;
-  border: 1px solid var(--color-border-dark-tertiary);
-  border-radius: 3px;
-  color: var(--color-text-dark-primary);
-  cursor: pointer;
-  background-color: var(--color-button-background);
-  transition: all 0.2s ease;
-}
-
-.reminder-create:hover {
-  color: var(--color-text-light-highlight);
-  background-color: var(--color-button-primary);
-}
-
-.reminder-delete-completed:hover {
-  color: var(--color-text-light-highlight);
-  background-color: var(--color-button-danger);
-}
-
-/* Button in the player list */
-.dont-forget-button {
-  gap: 0.5rem;
-  display: flex;
-  align-items: center;
-  padding: 0.5rem;
-  border: none;
-  color: var(--color-text-dark-secondary);
-  cursor: pointer;
-  background: none;
-  transition: all 0.2s ease;
-}
-
-.dont-forget-button:hover {
-  color: var(--color-text-hyperlink);
-  text-shadow: 0 0 4px var(--color-shadow-highlight);
-}
-
-.dont-forget-button i {
-  margin-right: 0.25rem;
-}
-
-/* Position reminder icon on the far right */
-.dont-forget-player-icon {
-  position: absolute;
-  right: 8px;
-  color: var(--user-color);
-  cursor: pointer;
-  transition: color 0.2s ease;
-}
-
-.dont-forget-player-icon:hover {
-  color: var(--color-text-hyperlink);
-  text-shadow: 0 0 3px var(--color-shadow-highlight);
-}
-
-/* Ensure parent has positioning context */
-#players li.player {
-  position: relative;
-}
-
-/* Responsive adjustments */
-@media (width <= 600px) {
-  .reminder-table {
-    font-size: 0.8rem;
-  }
-
-  .reminder-table th,
-  .reminder-table td {
-    padding: 0.5rem 0.25rem;
-  }
-
-  .col-created {
-    display: none;
+    &:hover {
+      text-shadow: 0 0 4px var(--color-shadow-highlight);
+      transform: scale(1.1);
+    }
   }
 }

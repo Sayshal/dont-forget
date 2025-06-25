@@ -32,6 +32,7 @@
     "reminder-owner": "Owner",
     "reminder-placeholder": "Enter your reminder text...",
     "reminder-text": "Reminder Text",
+    "save": "Save",
     "settings": {
       "inject-button": {
         "Hint": "Display the Reminders button in the player list",

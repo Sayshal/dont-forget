@@ -43,49 +43,33 @@ Hooks.once('init', () => {
 });
 
 /**
- * Add reminder icons to the player list whenever it renders
+ * Add reminder button to the player list header
  */
 Hooks.on('renderPlayerList', (app, html, data) => {
   if (!game.settings.get(DontForget.ID, DontForget.SETTINGS.INJECT_BUTTON)) {
     return;
   }
 
-  // Add icons to each player item
-  const playerItems = html.find('li.player');
+  // Remove any existing reminder buttons
+  html.find(`.${DontForget.ID}-header-button`).remove();
 
-  playerItems.each((index, playerItem) => {
-    const $playerItem = $(playerItem);
+  // Add single button to the h3 header
+  const $header = html.find('h3[aria-label="Players"]');
 
-    // Skip if already has icon
-    if ($playerItem.find(`.${DontForget.ID}-player-icon`).length > 0) return;
+  if ($header.length > 0) {
+    const $reminderButton = $(
+      `<i class="${DontForget.ID}-header-button fas fa-sticky-note" data-tooltip="${game.i18n.localize('DONT-FORGET.button-title')}" data-tooltip-direction="LEFT"></i>`
+    );
+    // Add click handler
+    $reminderButton.on('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      DontForget.reminderApp.render(true);
+    });
 
-    const userId = $playerItem.data('user-id');
-
-    // Only show for current user or for all users if GM
-    if (userId === game.user.id || game.user.isGM) {
-      const $playerName = $playerItem.find('.player-name');
-
-      // Create reminder icon
-      const $reminderIcon = $(`
-        <i class="${DontForget.ID}-player-icon fas fa-sticky-note"
-           data-tooltip="${game.i18n.localize('DONT-FORGET.button-title')}"
-           data-tooltip-direction="RIGHT">
-        </i>
-      `);
-
-      // Add click handler
-      $reminderIcon.on('click', (event) => {
-        event.preventDefault();
-        event.stopPropagation();
-        DontForget.reminderApp.render(true, { userId });
-      });
-
-      // Insert after player name
-      if ($playerName.length) {
-        $playerName.after($reminderIcon);
-      }
-    }
-  });
+    // Insert at the end of the header
+    $header.append($reminderButton);
+  }
 });
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
@@ -211,15 +195,17 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * Create a new reminder - opens dialog (Alternative approach with debugging)
+   * Create a new reminder using DialogV2
    */
-  static async createReminder() {
-    // Build user options for select dropdown
+  static async createReminder(event, target) {
     let userOptions = '';
+
     if (game.user.isGM) {
-      for (const user of game.users) {
-        const selected = user.id === game.user.id ? 'selected' : '';
-        userOptions += `<option value="${user.id}" ${selected}>${user.name}</option>`;
+      for (const user of game.users.contents) {
+        if (user.active) {
+          const selected = user.id === game.user.id ? 'selected' : '';
+          userOptions += `<option value="${user.id}" ${selected}>${user.name}</option>`;
+        }
       }
     }
 
@@ -244,8 +230,6 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     </form>
   `;
 
-    console.log('Dialog content HTML:', content);
-
     const result = await foundry.applications.api.DialogV2.prompt({
       window: {
         title: game.i18n.localize('DONT-FORGET.create-reminder-title'),
@@ -255,17 +239,10 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ok: {
         label: game.i18n.localize('DONT-FORGET.create'),
         callback: (event, button, dialog) => {
-          console.log('Button form:', button.form);
-          console.log('Form elements:', button.form.elements);
-
           // Access form data through button.form.elements
           const reminderText = button.form.elements.reminderText.value;
           const reminderOwner = button.form.elements.reminderOwner?.value;
 
-          console.log('Reminder text:', reminderText);
-          console.log('Reminder owner:', reminderOwner);
-
-          // Return the form data object
           return {
             reminderText: reminderText,
             reminderOwner: reminderOwner
@@ -276,32 +253,22 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       rejectClose: false
     });
 
-    console.log('Dialog result:', result);
-
     // If we got valid form data back
     if (result) {
       const reminderData = {
         label: result.reminderText || game.i18n.localize('DONT-FORGET.new-reminder-text')
       };
 
-      console.log('Processed reminder data:', reminderData);
-
       const ownerId = game.user.isGM && result.reminderOwner ? result.reminderOwner : game.user.id;
-      console.log('Owner ID:', ownerId);
 
-      try {
-        await ReminderManager.createReminder(ownerId, reminderData);
+      // Create reminder
+      await ReminderManager.createReminder(ownerId, reminderData);
 
-        // Force re-render the app
-        this.render(true);
+      // Show success message
+      ui.notifications.info(game.i18n.localize('DONT-FORGET.reminder-created'));
 
-        ui.notifications.info(`${game.i18n.localize('DONT-FORGET.reminder-created')}`);
-      } catch (error) {
-        console.error('Error creating reminder:', error);
-        ui.notifications.error(`${game.i18n.localize('DONT-FORGET.error-creating-reminder')}`);
-      }
-    } else {
-      console.log('No result returned from dialog');
+      // Re-render the app
+      this.render();
     }
   }
 
@@ -332,22 +299,114 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * Edit a reminder
+   * Edit an existing reminder using DialogV2
    */
-  static editReminder(event, target) {
-    const listItem = target.closest('tr');
-    if (!listItem) return;
+  static async editReminder(event, target) {
+    const reminderElement = target.closest('[data-reminder-id]');
+    if (!reminderElement) return;
 
-    const inputField = listItem.querySelector('.reminder-input');
-    if (!inputField) return;
+    const reminderId = reminderElement.dataset.reminderId;
 
-    // Toggle readonly state
-    inputField.readOnly = !inputField.readOnly;
+    // Get all reminders and find the specific one
+    const allReminders = ReminderManager.getReminders(game.user.id);
+    const reminder = allReminders[reminderId];
 
-    // Focus the input if it's now editable
-    if (!inputField.readOnly) {
-      inputField.focus();
-      inputField.select();
+    if (!reminder) {
+      ui.notifications.error('Reminder not found');
+      return;
+    }
+
+    // Check permissions
+    if (game.user.id !== reminder.userId && !game.user.isGM) {
+      ui.notifications.error("You don't have permission to edit this reminder");
+      return;
+    }
+
+    let userOptions = '';
+
+    if (game.user.isGM) {
+      for (const user of game.users.contents) {
+        if (user.active) {
+          const selected = user.id === reminder.userId ? 'selected' : '';
+          userOptions += `<option value="${user.id}" ${selected}>${user.name}</option>`;
+        }
+      }
+    }
+
+    const content = `
+    <form id="edit-reminder-form">
+      <div class="form-group">
+        <label for="reminder-text">${game.i18n.localize('DONT-FORGET.reminder-text')}</label>
+        <input type="text" id="reminder-text" name="reminderText" value="${reminder.label}" autofocus />
+      </div>
+      ${
+        game.user.isGM ?
+          `
+        <div class="form-group">
+          <label for="reminder-owner">${game.i18n.localize('DONT-FORGET.reminder-owner')}</label>
+          <select id="reminder-owner" name="reminderOwner">
+            ${userOptions}
+          </select>
+        </div>
+      `
+        : ''
+      }
+    </form>
+  `;
+
+    const result = await foundry.applications.api.DialogV2.prompt({
+      window: {
+        title: game.i18n.localize('DONT-FORGET.edit-reminder'),
+        icon: 'fas fa-edit'
+      },
+      content: content,
+      ok: {
+        label: game.i18n.localize('DONT-FORGET.save'),
+        callback: (event, button, dialog) => {
+          // Access form data through button.form.elements
+          const reminderText = button.form.elements.reminderText.value;
+          const reminderOwner = button.form.elements.reminderOwner?.value;
+
+          return {
+            reminderText: reminderText,
+            reminderOwner: reminderOwner
+          };
+        }
+      },
+      modal: true,
+      rejectClose: false
+    });
+
+    // If we got valid form data back
+    if (result) {
+      const updateData = {
+        label: result.reminderText
+      };
+
+      // Handle owner change if GM changed it
+      if (game.user.isGM && result.reminderOwner && result.reminderOwner !== reminder.userId) {
+        // If owner is changing, we need to delete from old user and create for new user
+        const newOwnerId = result.reminderOwner;
+
+        // Delete from old owner
+        await ReminderManager.deleteReminder(reminderId, reminder.userId);
+
+        // Create for new owner
+        const newReminderData = {
+          label: result.reminderText,
+          isDone: reminder.isDone
+        };
+        await ReminderManager.createReminder(newOwnerId, newReminderData);
+      } else {
+        // Just update the existing reminder
+        await ReminderManager.updateReminder(reminderId, updateData);
+      }
+
+      // Show success message
+      ui.notifications.info('Reminder updated successfully!');
+
+      // Re-render the app
+      this.render();
     }
   }
 

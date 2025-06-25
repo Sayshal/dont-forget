@@ -1,5 +1,5 @@
 <div class="reminder-container">
-  {{#if hasReminders}}
+  {{#if reminders.length}}
     <div class="reminder-table-container">
       <table class="reminder-table">
         <thead>
@@ -10,7 +10,7 @@
             <th class="col-reminder" data-tooltip="{{localize 'DONT-FORGET.table-headers.reminder-tooltip'}}">
               {{localize 'DONT-FORGET.table-headers.reminder'}}
             </th>
-            {{#if isGM}}
+            {{#if showGMColumns}}
               <th class="col-creator" data-tooltip="{{localize 'DONT-FORGET.table-headers.creator-tooltip'}}">
                 {{localize 'DONT-FORGET.table-headers.creator'}}
               </th>
@@ -25,29 +25,26 @@
         </thead>
         <tbody>
           {{#each reminders}}
-            <tr class="reminder-row {{#if completed}}completed{{/if}}" data-reminder-id="{{id}}" data-user-id="{{userId}}">
+            <tr class="reminder-row {{#if completed}}completed{{/if}}" data-reminder-id="{{id}}">
               <td class="col-status">
-                <input type="checkbox" name="{{id}}.isDone" id="reminder-{{id}}" class="reminder-checkbox"
-                  {{#if isDone}}checked{{/if}} data-dtype="Boolean" data-tooltip="{{localize 'DONT-FORGET.mark-done'}}">
+                <input type="checkbox" class="reminder-checkbox" name="reminders.{{id}}.completed"
+                  {{#if completed}}checked{{/if}} data-tooltip="{{localize 'DONT-FORGET.mark-done'}}">
               </td>
-
               <td class="col-reminder">
-                <input type="text" name="{{id}}.label" value="{{label}}" class="reminder-input" data-dtype="String"
-                  readonly data-tooltip="{{localize 'DONT-FORGET.reminder-input-tooltip'}}">
+                {{#if completed}}
+                  <span class="reminder-text completed">{{label}}</span>
+                {{else}}
+                  <span class="reminder-text">{{label}}</span>
+                {{/if}}
               </td>
-
-              {{#if ../isGM}}
+              {{#if ../showGMColumns}}
                 <td class="col-creator">
                   <span class="creator-name">{{creatorName}}</span>
                 </td>
               {{/if}}
-
               <td class="col-created">
-                <span class="created-time" data-tooltip="{{localize 'DONT-FORGET.created-time-tooltip'}}">
-                  {{timeDisplay}}
-                </span>
+                <span class="created-time">{{createdTime}}</span>
               </td>
-
               <td class="col-actions">
                 <div class="reminder-actions">
                   <button type="button" data-action="edit" class="reminder-edit"
