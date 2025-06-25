@@ -1,0 +1,17 @@
+<form id="{{#if editMode}}edit{{else}}create{{/if}}-reminder-form">
+  <div class="reminder-form-field">
+    <label for="reminder-text">{{labels.reminderText}}</label>
+    <textarea id="reminder-text" name="reminderText" {{#unless editMode}}placeholder="{{placeholderText}}" {{/unless}}
+      autofocus>{{#if editMode}}{{initialText}}{{/if}}</textarea>
+  </div>
+  {{#if isGM}}
+    <div class="reminder-form-field">
+      <label for="reminder-owner">{{labels.reminderOwner}}</label>
+      <select id="reminder-owner" name="reminderOwner">
+        {{#each users}}
+          <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+        {{/each}}
+      </select>
+    </div>
+  {{/if}}
+</form>

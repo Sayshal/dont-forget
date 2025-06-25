@@ -13,7 +13,8 @@ export class DontForget {
   };
 
   static TEMPLATES = {
-    REMINDER_LIST: `modules/${this.ID}/templates/reminder-list.hbs`
+    REMINDER_LIST: `modules/${this.ID}/templates/reminder-list.hbs`,
+    CREATE_REMINDER_FORM: `modules/${this.ID}/templates/create-reminder.hbs`
   };
 
   static SETTINGS = {
@@ -59,11 +60,19 @@ Hooks.on('renderPlayerList', (app, html, data) => {
     const $reminderButton = $(
       `<i class="${DontForget.ID}-header-button fas fa-sticky-note" data-tooltip="${game.i18n.localize('DONT-FORGET.button-title')}" data-tooltip-direction="LEFT"></i>`
     );
-    // Add click handler
+
+    // Add left-click handler (open main window)
     $reminderButton.on('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
       DontForget.reminderApp.render(true);
+    });
+
+    // Add right-click handler (immediately open Add Reminder dialog)
+    $reminderButton.on('contextmenu', async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      await ReminderApp.createReminder(event, event.target);
     });
 
     // Insert at the end of the header
@@ -204,41 +213,30 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    * Create a new reminder using DialogV2
    */
   static async createReminder(event, target) {
-    let userOptions = '';
+    const placeholderText = game.i18n.localize('DONT-FORGET.reminder-placeholder');
 
+    // Prepare template data
+    const templateData = {
+      isGM: game.user.isGM,
+      placeholderText: placeholderText,
+      labels: {
+        reminderText: game.i18n.localize('DONT-FORGET.reminder-text'),
+        reminderOwner: game.i18n.localize('DONT-FORGET.reminder-owner')
+      },
+      users: []
+    };
+
+    // Add user options for GMs
     if (game.user.isGM) {
-      for (const user of game.users.contents) {
-        if (user.active) {
-          const selected = user.id === game.user.id ? 'selected' : '';
-          userOptions += `<option value="${user.id}" ${selected}>${user.name}</option>`;
-        }
-      }
+      templateData.users = game.users.contents.map((user) => ({
+        id: user.id,
+        name: user.name,
+        selected: user.id === game.user.id
+      }));
     }
 
-    const content = `
-      <form id="create-reminder-form">
-        <div class="reminder-form-field">
-          <label for="reminder-text">${game.i18n.localize('DONT-FORGET.reminder-text')}</label>
-          <textarea
-            id="reminder-text"
-            name="reminderText"
-            placeholder="${game.i18n.localize('DONT-FORGET.reminder-placeholder')}"
-            autofocus></textarea>
-        </div>
-        ${
-          game.user.isGM ?
-            `
-        <div class="reminder-form-field">
-          <label for="reminder-owner">${game.i18n.localize('DONT-FORGET.reminder-owner')}</label>
-          <select id="reminder-owner" name="reminderOwner">
-            ${userOptions}
-          </select>
-        </div>
-        `
-          : ''
-        }
-      </form>
-    `;
+    // Render the form template
+    const content = await renderTemplate(DontForget.TEMPLATES.CREATE_REMINDER_FORM, templateData);
 
     const result = await DialogV2.prompt({
       window: {
@@ -253,7 +251,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
           const reminderOwner = button.form.elements.reminderOwner?.value;
 
           return {
-            reminderText: reminderText,
+            reminderText: reminderText || placeholderText,
             reminderOwner: reminderOwner
           };
         }
@@ -272,7 +270,11 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
       await ReminderManager.createReminder(ownerId, reminderData);
       ui.notifications.info(game.i18n.localize('DONT-FORGET.reminder-created'));
-      this.render();
+
+      // Get the app instance and render it
+      if (DontForget.reminderApp && DontForget.reminderApp.rendered) {
+        DontForget.reminderApp.render();
+      }
     }
   }
 
@@ -329,40 +331,29 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return;
     }
 
-    let userOptions = '';
+    // Prepare template data
+    const templateData = {
+      isGM: game.user.isGM,
+      editMode: true,
+      initialText: reminder.label,
+      labels: {
+        reminderText: game.i18n.localize('DONT-FORGET.reminder-text'),
+        reminderOwner: game.i18n.localize('DONT-FORGET.reminder-owner')
+      },
+      users: []
+    };
 
+    // Add user options for GMs
     if (game.user.isGM) {
-      for (const user of game.users.contents) {
-        if (user.active) {
-          const selected = user.id === reminder.userId ? 'selected' : '';
-          userOptions += `<option value="${user.id}" ${selected}>${user.name}</option>`;
-        }
-      }
+      templateData.users = game.users.contents.map((user) => ({
+        id: user.id,
+        name: user.name,
+        selected: user.id === reminder.userId
+      }));
     }
 
-    const content = `
-      <form id="edit-reminder-form">
-        <div class="reminder-form-field">
-          <label for="reminder-text">${game.i18n.localize('DONT-FORGET.reminder-text')}</label>
-          <textarea
-            id="reminder-text"
-            name="reminderText"
-            autofocus>${reminder.label}</textarea>
-        </div>
-        ${
-          game.user.isGM ?
-            `
-        <div class="reminder-form-field">
-          <label for="reminder-owner">${game.i18n.localize('DONT-FORGET.reminder-owner')}</label>
-          <select id="reminder-owner" name="reminderOwner">
-            ${userOptions}
-          </select>
-        </div>
-        `
-          : ''
-        }
-      </form>
-    `;
+    // Render the form template
+    const content = await renderTemplate(DontForget.TEMPLATES.CREATE_REMINDER_FORM, templateData);
 
     const result = await DialogV2.prompt({
       window: {
