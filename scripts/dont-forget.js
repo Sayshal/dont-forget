@@ -255,28 +255,21 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       ok: {
         label: game.i18n.localize('DONT-FORGET.create'),
         callback: (event, button, dialog) => {
-          console.log('Dialog element:', dialog);
+          console.log('Button form:', button.form);
+          console.log('Form elements:', button.form.elements);
 
-          const form = dialog.querySelector('#create-reminder-form');
-          console.log('Form element found:', form);
+          // Access form data through button.form.elements
+          const reminderText = button.form.elements.reminderText.value;
+          const reminderOwner = button.form.elements.reminderOwner?.value;
 
-          if (form) {
-            // Debug: Log all form elements
-            const inputs = form.querySelectorAll('input, select');
-            console.log('Form inputs found:', inputs);
-            inputs.forEach((input) => {
-              console.log(`Input ${input.name}: ${input.value}`);
-            });
+          console.log('Reminder text:', reminderText);
+          console.log('Reminder owner:', reminderOwner);
 
-            const formData = new FormDataExtended(form);
-            console.log('FormDataExtended object:', formData);
-            console.log('FormDataExtended.object:', formData.object);
-
-            return formData.object;
-          }
-
-          console.warn('Form not found in dialog');
-          return null;
+          // Return the form data object
+          return {
+            reminderText: reminderText,
+            reminderOwner: reminderOwner
+          };
         }
       },
       modal: true,
