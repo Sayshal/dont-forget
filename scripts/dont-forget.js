@@ -43,41 +43,52 @@ Hooks.once('init', () => {
 });
 
 /**
- * Add reminder button to the player list header
+ * Add reminder button to the player list
  */
-Hooks.on('renderPlayerList', (app, html, data) => {
+Hooks.on('renderPlayers', (app, html, data) => {
   if (!game.settings.get(DontForget.ID, DontForget.SETTINGS.INJECT_BUTTON)) {
     return;
   }
 
   // Remove any existing reminder buttons
-  html.find(`.${DontForget.ID}-header-button`).remove();
+  const existingButtons = html.querySelectorAll(`.${DontForget.ID}-header-button`);
+  existingButtons.forEach((button) => button.remove());
 
-  // Add single button to the h3 header
-  const $header = html.find('h3[aria-label="Players"]');
+  // If GM, add buttons for all players. If not GM, only add for self
+  const playersToProcess = game.user.isGM ? html.querySelectorAll('.player') : html.querySelectorAll('.player.self');
 
-  if ($header.length > 0) {
-    const $reminderButton = $(
-      `<i class="${DontForget.ID}-header-button fas fa-sticky-note" data-tooltip="${game.i18n.localize('DONT-FORGET.button-title')}" data-tooltip-direction="LEFT"></i>`
-    );
+  playersToProcess.forEach((playerElement) => {
+    const userId = playerElement.dataset.userId;
+    const playerNameSpan = playerElement.querySelector('.player-name');
 
-    // Add left-click handler (open main window)
-    $reminderButton.on('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      DontForget.reminderApp.render(true);
-    });
+    if (playerNameSpan && userId) {
+      // Create the reminder button element
+      const reminderButton = document.createElement('i');
+      reminderButton.className = `${DontForget.ID}-header-button fas fa-sticky-note`;
+      reminderButton.setAttribute('data-tooltip', game.i18n.localize('DONT-FORGET.button-title'));
+      reminderButton.setAttribute('data-tooltip-direction', 'LEFT');
+      reminderButton.style.marginLeft = '8px';
+      reminderButton.style.cursor = 'pointer';
 
-    // Add right-click handler (immediately open Add Reminder dialog)
-    $reminderButton.on('contextmenu', async (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      await ReminderApp.createReminder(event, event.target);
-    });
+      // Add left-click handler (open main window for this specific user)
+      reminderButton.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        DontForget.reminderApp.setViewingUser(userId);
+        DontForget.reminderApp.render(true);
+      });
 
-    // Insert at the end of the header
-    $header.append($reminderButton);
-  }
+      // Add right-click handler (immediately open Add Reminder dialog for this user)
+      reminderButton.addEventListener('contextmenu', async (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        await ReminderApp.createReminderForUser(event, event.target, userId);
+      });
+
+      // Insert after the player name span
+      playerNameSpan.insertAdjacentElement('afterend', reminderButton);
+    }
+  });
 });
 
 const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applications.api;
@@ -86,6 +97,11 @@ const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applicat
  * Main application for managing reminders
  */
 class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
+  constructor(options = {}) {
+    super(options);
+    this.viewingUserId = game?.user?.id; // Default to current user
+  }
+
   static DEFAULT_OPTIONS = {
     id: `${DontForget.ID}-app`,
     tag: 'div',
@@ -106,8 +122,22 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     classes: [DontForget.ID]
   };
 
+  /**
+   * Set which user's reminders to view
+   */
+  setViewingUser(userId) {
+    this.viewingUserId = userId;
+  }
+
   get title() {
-    return game.user.isGM ? `${DontForget.TITLE} - ${game.i18n.localize('DONT-FORGET.dungeon-master')}` : `${DontForget.TITLE} - ${game.user.name}`;
+    const viewingUser = game.users.get(this.viewingUserId);
+    const viewingUserName = viewingUser ? viewingUser.name : 'Unknown User';
+
+    if (game.user.isGM) {
+      return `${DontForget.TITLE} - ${viewingUserName}${this.viewingUserId === game.user.id ? ' (You)' : ''}`;
+    } else {
+      return `${DontForget.TITLE} - ${game.user.name}`;
+    }
   }
 
   /**
@@ -166,7 +196,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    * Prepare context data for rendering the template
    */
   _prepareContext() {
-    const rawReminders = ReminderManager.getReminders(game.user.id);
+    this.viewingUserId = game.user.id;
+    const rawReminders = ReminderManager.getReminders(this.viewingUserId);
 
     // Process and enhance reminder data
     const processedReminders = Object.values(rawReminders).map((reminder) => {
@@ -210,10 +241,20 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * Create a new reminder using DialogV2
+   * Create a new reminder for the currently viewed user
    */
   static async createReminder(event, target) {
+    const app = DontForget.reminderApp;
+    const targetUserId = app.viewingUserId;
+    await this.createReminderForUser(event, target, targetUserId);
+  }
+
+  /**
+   * Create a new reminder for a specific user
+   */
+  static async createReminderForUser(event, target, targetUserId) {
     const placeholderText = game.i18n.localize('DONT-FORGET.reminder-placeholder');
+    const targetUser = game.users.get(targetUserId);
 
     // Prepare template data
     const templateData = {
@@ -231,7 +272,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       templateData.users = game.users.contents.map((user) => ({
         id: user.id,
         name: user.name,
-        selected: user.id === game.user.id
+        selected: user.id === targetUserId
       }));
     }
 
@@ -240,7 +281,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const result = await DialogV2.prompt({
       window: {
-        title: game.i18n.localize('DONT-FORGET.create-reminder-title'),
+        title: `${game.i18n.localize('DONT-FORGET.create-reminder-title')}${targetUser ? ` for ${targetUser.name}` : ''}`,
         icon: 'fas fa-plus'
       },
       content: content,
@@ -266,7 +307,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         label: result.reminderText
       };
 
-      const ownerId = game.user.isGM && result.reminderOwner ? result.reminderOwner : game.user.id;
+      const ownerId = game.user.isGM && result.reminderOwner ? result.reminderOwner : targetUserId;
 
       await ReminderManager.createReminder(ownerId, reminderData);
       ui.notifications.info(game.i18n.localize('DONT-FORGET.reminder-created'));
@@ -401,10 +442,11 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /**
-   * Delete all completed reminders
+   * Delete all completed reminders for the currently viewed user
    */
   static async deleteCompletedReminders() {
-    const reminders = ReminderManager.getReminders(game.user.id);
+    const app = DontForget.reminderApp;
+    const reminders = ReminderManager.getReminders(app.viewingUserId);
     const completedReminders = Object.values(reminders).filter((r) => r.isDone);
 
     if (completedReminders.length === 0) {
