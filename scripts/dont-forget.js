@@ -1,6 +1,8 @@
 import { ReminderManager } from './reminder-manager.js';
 import { registerSettings } from './settings.js';
 
+const { renderTemplate } = foundry.applications.handlebars;
+
 /**
  * Main module class that initializes the Don't Forget module
  */
@@ -246,7 +248,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static async createReminder(event, target) {
     const app = DontForget.reminderApp;
     const targetUserId = app.viewingUserId;
-    await this.createReminderForUser(event, target, targetUserId);
+    await ReminderApp.createReminderForUser(event, target, targetUserId);
   }
 
   /**
