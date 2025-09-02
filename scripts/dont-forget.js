@@ -47,7 +47,7 @@ Hooks.once('init', () => {
 /**
  * Add reminder button to the player list
  */
-Hooks.on('renderPlayers', (app, html, data) => {
+Hooks.on('renderPlayers', (_app, html, _data) => {
   if (!game.settings.get(DontForget.ID, DontForget.SETTINGS.INJECT_BUTTON)) {
     return;
   }
@@ -99,6 +99,7 @@ const { ApplicationV2, HandlebarsApplicationMixin, DialogV2 } = foundry.applicat
  * Main application for managing reminders
  */
 class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
+  /** @inheritdoc */
   constructor(options = {}) {
     super(options);
     this.viewingUserId = game?.user?.id; // Default to current user
@@ -108,9 +109,9 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     id: `${DontForget.ID}-app`,
     tag: 'div',
     actions: {
-      'create': ReminderApp.createReminder,
-      'delete': ReminderApp.deleteReminder,
-      'edit': ReminderApp.editReminder,
+      create: ReminderApp.createReminder,
+      delete: ReminderApp.deleteReminder,
+      edit: ReminderApp.editReminder,
       'delete-completed': ReminderApp.deleteCompletedReminders
     },
     position: {
@@ -126,11 +127,13 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Set which user's reminders to view
+   * @param userId ID of viewing user (game.user.id)
    */
   setViewingUser(userId) {
     this.viewingUserId = userId;
   }
 
+  /** @inheritdoc */
   get title() {
     const viewingUser = game.users.get(this.viewingUserId);
     const viewingUserName = viewingUser ? viewingUser.name : 'Unknown User';
@@ -153,6 +156,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Add event listeners after rendering
+   * @param context Application context.
+   * @param options Additional application options.
    */
   _onRender(context, options) {
     super._onRender(context, options);
@@ -165,6 +170,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Handle checkbox changes immediately
+   * @param event Event triggering checkbox change
    */
   async _onCheckboxChange(event) {
     const checkbox = event.target;
@@ -196,6 +202,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Prepare context data for rendering the template
+   * @returns Application context
    */
   _prepareContext() {
     this.viewingUserId = game.user.id;
@@ -244,6 +251,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Create a new reminder for the currently viewed user
+   * @param event Event triggering reminder creation dialog
+   * @param target Target button class.
    */
   static async createReminder(event, target) {
     const app = DontForget.reminderApp;
@@ -253,8 +262,11 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Create a new reminder for a specific user
+   * @param _event Event triggering reminder creation dialog
+   * @param _target Target button class.
+   * @param targetUserId Intended user to create reminder for.
    */
-  static async createReminderForUser(event, target, targetUserId) {
+  static async createReminderForUser(_event, _target, targetUserId) {
     const placeholderText = game.i18n.localize('DONT-FORGET.reminder-placeholder');
     const targetUser = game.users.get(targetUserId);
 
@@ -289,7 +301,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       content: content,
       ok: {
         label: game.i18n.localize('DONT-FORGET.create'),
-        callback: (event, button, dialog) => {
+        callback: (_event, button, _dialog) => {
           const reminderText = button.form.elements.reminderText.value.trim();
           const reminderOwner = button.form.elements.reminderOwner?.value;
 
@@ -323,8 +335,10 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Delete a reminder
+   * @param _event Event triggering delete dialog
+   * @param target Target of dialog button
    */
-  static async deleteReminder(event, target) {
+  static async deleteReminder(_event, target) {
     const reminderElement = target.closest('[data-reminder-id]');
     if (!reminderElement) return;
 
@@ -355,8 +369,10 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Edit an existing reminder using DialogV2
+   * @param _event Event triggering event dialog
+   * @param target Target of dialog button
    */
-  static async editReminder(event, target) {
+  static async editReminder(_event, target) {
     const reminderElement = target.closest('[data-reminder-id]');
     if (!reminderElement) return;
 
@@ -406,7 +422,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       content: content,
       ok: {
         label: game.i18n.localize('DONT-FORGET.save'),
-        callback: (event, button, dialog) => {
+        callback: (_event, button, _dialog) => {
           const reminderText = button.form.elements.reminderText.value.trim();
           const reminderOwner = button.form.elements.reminderOwner?.value;
 

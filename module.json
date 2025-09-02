@@ -1,33 +1,40 @@
 {
-  "id": "dont-forget",
-  "title": "Don't Forget!",
-  "description": "A simple Foundry VTT module for players and GMs to create reminders with support for tracking completion and owner visibility.",
-  "version": "",
-  "bugs": "https://github.com/Sayshal/dont-forget/issues",
-  "changelog": "https://github.com/Sayshal/dont-forget/releases",
-  "license": "https://github.com/Sayshal/dont-forget?tab=MIT-1-ov-file",
-  "readme": "https://github.com/Sayshal/dont-forget?tab=readme-ov-file",
   "authors": [
     {
-      "name": "Tyler",
       "discord": "Tyler",
-      "url": "https://github.com/Sayshal",
-      "flags": {}
+      "flags": {},
+      "name": "Tyler",
+      "url": "https://github.com/Sayshal"
     }
   ],
+  "bugs": "https://github.com/Sayshal/dont-forget/issues",
+  "changelog": "https://github.com/Sayshal/dont-forget/releases",
   "compatibility": {
     "maximum": "13",
     "minimum": "13",
     "verified": "13"
   },
-  "download": "https://github.com/Sayshal/dont-forget/releases/download/1.1.0/module.zip",
-  "esmodules": ["scripts/dont-forget.js"],
+  "description": "A simple Foundry VTT module for players and GMs to create reminders with support for tracking completion and owner visibility.",
+  "download": "",
+  "esmodules": [
+    "scripts/dont-forget.js"
+  ],
   "flags": {
     "hotReload": {
-      "extensions": ["css", "html", "hbs", "json"],
-      "paths": ["styles", "lang", "templates"]
+      "extensions": [
+        "css",
+        "html",
+        "hbs",
+        "json"
+      ],
+      "paths": [
+        "styles",
+        "lang",
+        "templates"
+      ]
     }
   },
+  "id": "dont-forget",
   "languages": [
     {
       "lang": "en",
@@ -35,6 +42,10 @@
       "path": "lang/en.json"
     }
   ],
-  "manifest": "https://github.com/Sayshal/dont-forget/releases/latest/module.json",
-  "url": "https://github.com/Sayshal/dont-forget"
+  "license": "https://github.com/Sayshal/dont-forget?tab=MIT-1-ov-file",
+  "manifest": "https://github.com/Sayshal/dont-forget/releases/latest/download/module.json",
+  "readme": "https://github.com/Sayshal/dont-forget?tab=readme-ov-file",
+  "title": "Don't Forget!",
+  "url": "https://github.com/Sayshal/dont-forget",
+  "version": ""
 }

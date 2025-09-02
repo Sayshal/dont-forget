@@ -7,7 +7,7 @@
   &.edit-reminder-dialog {
     .dialog-content {
       padding: 1rem;
-      min-width: 320px;
+      min-width: 20rem;
     }
 
     .reminder-form-field {
@@ -40,7 +40,7 @@
     }
 
     textarea {
-      min-height: 100px;
+      min-height: 6.25rem;
       resize: vertical;
     }
   }
@@ -96,12 +96,12 @@
 
       /* Column sizing - let them size naturally but with minimums */
       .col-status {
-        width: 60px;
+        width: 3.75rem;
         text-align: center;
       }
 
       .col-reminder {
-        min-width: 200px;
+        min-width: 12.5rem;
         max-width: none;
         word-wrap: break-word;
 
@@ -112,17 +112,17 @@
       }
 
       .col-creator {
-        min-width: 100px;
+        min-width: 6.25rem;
         white-space: nowrap;
       }
 
       .col-created {
-        min-width: 80px;
+        min-width: 5rem;
         white-space: nowrap;
       }
 
       .col-actions {
-        width: 80px;
+        width: 5rem;
         text-align: center;
       }
     }
@@ -150,7 +150,7 @@
       .reminder-delete {
         padding: 0.25rem;
         border: none;
-        border-radius: 3px;
+        border-radius: 0.188rem;
         cursor: pointer;
         background: none;
         transition: color 0.2s ease;
@@ -205,7 +205,7 @@
     font-size: 1rem;
 
     &:hover {
-      text-shadow: 0 0 4px var(--color-shadow-highlight);
+      text-shadow: 0 0 0.25rem var(--color-shadow-highlight);
       transform: scale(1.1);
     }
   }
