@@ -11,7 +11,7 @@
   "changelog": "https://github.com/Sayshal/dont-forget/releases",
   "compatibility": {
     "minimum": "13",
-    "verified": "13"
+    "verified": "14.364"
   },
   "description": "A simple Foundry VTT module for players and GMs to create reminders with support for tracking completion and owner visibility.",
   "download": "",
