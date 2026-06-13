@@ -1,17 +1,18 @@
-# Treat all text files as UTF-8
-*.md     text eol=lf
-*.json   text eol=lf
-*.js     text eol=lf
-*.txt    text eol=lf
+# Set default behavior to automatically normalize line endings
+*               text=auto eol=lf
 
+# Force specific filetypes to have unix line endings (LF)
+*.js            text eol=lf
+*.mjs           text eol=lf
+*.json          text eol=lf
+*.md            text eol=lf
+*.txt           text eol=lf
+*.css           text eol=lf
 
-# Handle merge conflicts for specific file types
-*.json   merge=union
+# Diffing and merging strategies
+*.json          diff=json
+*.js            diff=javascript
+*.md            diff=markdown
 
-# Set diff for specific file types
-*.md     diff=markdown
-*.js     diff=javascript
-*.json   diff=json
-
-# Handle line endings properly
-*         text=auto
+# Merge strategies
+*.json          merge=union

@@ -10,7 +10,6 @@
   "bugs": "https://github.com/Sayshal/dont-forget/issues",
   "changelog": "https://github.com/Sayshal/dont-forget/releases",
   "compatibility": {
-    "maximum": "13",
     "minimum": "13",
     "verified": "13"
   },
