@@ -13,7 +13,7 @@
     "minimum": "13",
     "verified": "14.364"
   },
-  "description": "A simple Foundry VTT module for players and GMs to create reminders with support for tracking completion and owner visibility.",
+  "description": "A to-do list that lives in Foundry's player list, one click from wherever you are. Jot down plot hooks, character goals, or rules you keep meaning to look up, tick them off as you go, and clear the done ones in bulk. Each player's list stays private to them, while the GM sees everyone's, plus who wrote what.",
   "download": "",
   "esmodules": [
     "scripts/dont-forget.js"
