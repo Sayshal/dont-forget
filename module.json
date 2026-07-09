@@ -10,7 +10,7 @@
   "bugs": "https://github.com/Sayshal/dont-forget/issues",
   "changelog": "https://github.com/Sayshal/dont-forget/releases",
   "compatibility": {
-    "minimum": "13",
+    "minimum": "14",
     "verified": "14.364"
   },
   "description": "A to-do list that lives in Foundry's player list, one click from wherever you are. Jot down plot hooks, character goals, or rules you keep meaning to look up, tick them off as you go, and clear the done ones in bulk. Each player's list stays private to them, while the GM sees everyone's, plus who wrote what.",
@@ -28,20 +28,20 @@
       ],
       "paths": [
         "styles",
-        "lang",
         "templates"
       ]
     }
   },
   "id": "dont-forget",
-  "languages": [
-    {
-      "lang": "en",
-      "name": "English",
-      "path": "lang/en.json"
-    }
-  ],
   "license": "https://github.com/Sayshal/dont-forget?tab=MIT-1-ov-file",
+  "relationships": {
+    "requires": [
+      {
+        "id": "3ds-atlas",
+        "type": "module"
+      }
+    ]
+  },
   "manifest": "https://github.com/Sayshal/dont-forget/releases/latest/download/module.json",
   "readme": "https://github.com/Sayshal/dont-forget?tab=readme-ov-file",
   "title": "Don't Forget!",

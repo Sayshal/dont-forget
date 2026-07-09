@@ -27,12 +27,9 @@ export class DontForget {
    * Initialize the module
    */
   static initialize() {
-    console.log(`${this.TITLE} | Initializing module`);
-
-    // Register settings
+    ATLAS.register('dont-forget', { title: this.TITLE, github: 'Sayshal/dont-forget' });
+    ATLAS.log(3, 'Initializing module');
     registerSettings();
-
-    // Create reminder app instance
     this.reminderApp = new ReminderApp();
   }
 }
@@ -67,7 +64,7 @@ Hooks.on('renderPlayers', (_app, html, _data) => {
       // Create the reminder button element
       const reminderButton = document.createElement('i');
       reminderButton.className = `${DontForget.ID}-header-button fas fa-sticky-note`;
-      reminderButton.setAttribute('data-tooltip', game.i18n.localize('DONT-FORGET.button-title'));
+      reminderButton.setAttribute('data-tooltip', _loc('DONT-FORGET.button-title'));
       reminderButton.setAttribute('data-tooltip-direction', 'LEFT');
       reminderButton.style.marginLeft = '8px';
       reminderButton.style.cursor = 'pointer';
@@ -267,7 +264,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param targetUserId Intended user to create reminder for.
    */
   static async createReminderForUser(_event, _target, targetUserId) {
-    const placeholderText = game.i18n.localize('DONT-FORGET.reminder-placeholder');
+    const placeholderText = _loc('DONT-FORGET.reminder-placeholder');
     const targetUser = game.users.get(targetUserId);
 
     // Prepare template data
@@ -275,8 +272,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       isGM: game.user.isGM,
       placeholderText: placeholderText,
       labels: {
-        reminderText: game.i18n.localize('DONT-FORGET.reminder-text'),
-        reminderOwner: game.i18n.localize('DONT-FORGET.reminder-owner')
+        reminderText: _loc('DONT-FORGET.reminder-text'),
+        reminderOwner: _loc('DONT-FORGET.reminder-owner')
       },
       users: []
     };
@@ -295,12 +292,12 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const result = await DialogV2.prompt({
       window: {
-        title: `${game.i18n.localize('DONT-FORGET.create-reminder-title')}${targetUser ? ` for ${targetUser.name}` : ''}`,
+        title: `${_loc('DONT-FORGET.create-reminder-title')}${targetUser ? ` for ${targetUser.name}` : ''}`,
         icon: 'fas fa-plus'
       },
       content: content,
       ok: {
-        label: game.i18n.localize('DONT-FORGET.create'),
+        label: _loc('DONT-FORGET.create'),
         callback: (_event, button, _dialog) => {
           const reminderText = button.form.elements.reminderText.value.trim();
           const reminderOwner = button.form.elements.reminderOwner?.value;
@@ -324,7 +321,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const ownerId = game.user.isGM && result.reminderOwner ? result.reminderOwner : targetUserId;
 
       await ReminderManager.createReminder(ownerId, reminderData);
-      ui.notifications.info(game.i18n.localize('DONT-FORGET.reminder-created'));
+      ui.notifications.info('DONT-FORGET.reminder-created');
 
       // Get the app instance and render it
       if (DontForget.reminderApp && DontForget.reminderApp.rendered) {
@@ -355,9 +352,9 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const confirmed = await DialogV2.confirm({
       window: {
-        title: game.i18n.localize('DONT-FORGET.confirms.deleteConfirm.Title')
+        title: _loc('DONT-FORGET.confirms.deleteConfirm.Title')
       },
-      content: game.i18n.localize('DONT-FORGET.confirms.deleteConfirm.Content'),
+      content: _loc('DONT-FORGET.confirms.deleteConfirm.Content'),
       modal: true
     });
 
@@ -396,8 +393,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       editMode: true,
       initialText: reminder.label,
       labels: {
-        reminderText: game.i18n.localize('DONT-FORGET.reminder-text'),
-        reminderOwner: game.i18n.localize('DONT-FORGET.reminder-owner')
+        reminderText: _loc('DONT-FORGET.reminder-text'),
+        reminderOwner: _loc('DONT-FORGET.reminder-owner')
       },
       users: []
     };
@@ -416,12 +413,12 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const result = await DialogV2.prompt({
       window: {
-        title: game.i18n.localize('DONT-FORGET.edit-reminder'),
+        title: _loc('DONT-FORGET.edit-reminder'),
         icon: 'fas fa-edit'
       },
       content: content,
       ok: {
-        label: game.i18n.localize('DONT-FORGET.save'),
+        label: _loc('DONT-FORGET.save'),
         callback: (_event, button, _dialog) => {
           const reminderText = button.form.elements.reminderText.value.trim();
           const reminderOwner = button.form.elements.reminderOwner?.value;
@@ -468,15 +465,15 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const completedReminders = Object.values(reminders).filter((r) => r.isDone);
 
     if (completedReminders.length === 0) {
-      ui.notifications.info(game.i18n.localize('DONT-FORGET.no-completed-reminders'));
+      ui.notifications.info('DONT-FORGET.no-completed-reminders');
       return;
     }
 
     const confirmed = await DialogV2.confirm({
       window: {
-        title: game.i18n.localize('DONT-FORGET.confirms.deleteCompletedConfirm.Title')
+        title: _loc('DONT-FORGET.confirms.deleteCompletedConfirm.Title')
       },
-      content: game.i18n.localize('DONT-FORGET.confirms.deleteCompletedConfirm.Content'),
+      content: _loc('DONT-FORGET.confirms.deleteCompletedConfirm.Content'),
       modal: true
     });
 
