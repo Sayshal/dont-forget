@@ -1,2 +1,17 @@
-**Changes**
-- Dummy release notes for testing ATLAS update messages.
+## Breaking Changes
+
+- Don't Forget now requires the 3DS:ATLAS module, which Foundry installs alongside it and which provides shared logging, localization, and update notices.
+- The minimum supported Foundry version is now 14.
+
+## Bug Fixes
+
+- Release announcements now show a single Foundry version instead of an empty range.
+
+## Changes
+
+- Blank issues are enabled, and the issue picker links to the Don't Forget Discord.
+- Release packages now use a stable module.zip download name.
+- Removed the bundled localization files; translations now come from the required 3DS:ATLAS module.
+- The bug report form now asks for your game system and version instead of assuming D&D 5e.
+- The bug report form's version placeholders now suggest current Foundry and dnd5e releases.
+- The module listing now covers private per-player lists, the GM's view of everyone's items, and bulk-clearing completed entries.
