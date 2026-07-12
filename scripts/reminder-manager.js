@@ -22,7 +22,7 @@ export class ReminderManager {
     const user = game.users.get(userId);
 
     if (!user) {
-      console.error(`${DontForget.TITLE} | User with ID ${userId} not found`);
+      ATLAS.log(1, `User with ID ${userId} not found`);
       return {};
     }
 
@@ -104,14 +104,14 @@ export class ReminderManager {
     const reminder = allReminders[reminderId];
 
     if (!reminder) {
-      console.error(`${DontForget.TITLE} | Reminder with ID ${reminderId} not found`);
+      ATLAS.log(1, `Reminder with ID ${reminderId} not found`);
       return null;
     }
 
     // Get the owner user
     const user = game.users.get(reminder.userId);
     if (!user) {
-      console.error(`${DontForget.TITLE} | User ${reminder.userId} not found`);
+      ATLAS.log(1, `User ${reminder.userId} not found`);
       return null;
     }
 
@@ -141,7 +141,7 @@ export class ReminderManager {
   static async deleteReminder(reminderId, userId) {
     const user = game.users.get(userId);
     if (!user) {
-      console.error(`${DontForget.TITLE} | User ${userId} not found`);
+      ATLAS.log(1, `User ${userId} not found`);
       return null;
     }
 
