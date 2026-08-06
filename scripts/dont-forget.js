@@ -23,6 +23,14 @@ export class DontForget {
     INJECT_BUTTON: 'inject-button'
   };
 
+  static HOOKS = {
+    REMINDER_CREATED: 'dontForget.reminderCreated',
+    REMINDER_COMPLETED: 'dontForget.reminderCompleted'
+  };
+
+  /** @type {Map<string, object>} Last-seen reminders per user, used to classify flag changes */
+  static #lastSeen = new Map();
+
   /**
    * Initialize the module
    */
@@ -31,6 +39,32 @@ export class DontForget {
     ATLAS.log(3, 'Initializing module');
     registerSettings();
     this.reminderApp = new ReminderApp();
+    game.modules.get(this.ID).api = ReminderManager;
+    globalThis.DONTFORGET = { api: ReminderManager };
+  }
+
+  /**
+   * Record the current reminder state for every user without firing hooks
+   */
+  static seedReminderCache() {
+    game.users.forEach((user) => this.#lastSeen.set(user.id, foundry.utils.deepClone(ReminderManager.getUserReminders(user.id))));
+  }
+
+  /**
+   * Fire reminder hooks for whatever changed in a user's reminder flags
+   * @param {object} user - The updated user document
+   * @param {boolean} remote - Whether another client authored the change
+   */
+  static syncReminders(user, remote) {
+    const previous = this.#lastSeen.get(user.id) ?? {};
+    const current = ReminderManager.getUserReminders(user.id);
+    this.#lastSeen.set(user.id, foundry.utils.deepClone(current));
+
+    for (const reminder of Object.values(current)) {
+      const before = previous[reminder.id];
+      if (!before) Hooks.callAll(this.HOOKS.REMINDER_CREATED, reminder, { remote });
+      else if (reminder.isDone && !before.isDone) Hooks.callAll(this.HOOKS.REMINDER_COMPLETED, reminder, { remote });
+    }
   }
 }
 
@@ -39,6 +73,20 @@ export class DontForget {
  */
 Hooks.once('init', () => {
   DontForget.initialize();
+});
+
+Hooks.once('ready', () => {
+  DontForget.seedReminderCache();
+});
+
+/**
+ * Fire reminder hooks and refresh the open app whenever reminder flags change on any client
+ */
+Hooks.on('updateUser', (user, changes, _options, userId) => {
+  if (!changes.flags?.[DontForget.ID]) return;
+
+  DontForget.syncReminders(user, userId !== game.user.id);
+  if (DontForget.reminderApp?.rendered) DontForget.reminderApp.render();
 });
 
 /**
@@ -202,7 +250,6 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    * @returns Application context
    */
   _prepareContext() {
-    this.viewingUserId = game.user.id;
     const rawReminders = ReminderManager.getReminders(this.viewingUserId);
 
     // Process and enhance reminder data

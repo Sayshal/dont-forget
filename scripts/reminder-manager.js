@@ -7,6 +7,7 @@ import { DontForget } from './dont-forget.js';
  * @property {boolean} isDone - Completion status
  * @property {string} userId - User who created the reminder
  * @property {number} [createdAt] - Creation timestamp
+ * @property {string} [source] - Module id that produced the reminder
  */
 
 /**
@@ -63,6 +64,20 @@ export class ReminderManager {
   }
 
   /**
+   * Check whether a declared producer source may act on a reminder
+   * @param {Reminder} reminder - The reminder being acted on
+   * @param {string} [source] - Declared producer source
+   * @returns {boolean} True when the action must be refused
+   */
+  static #sourceBlocked(reminder, source) {
+    const owner = reminder.source || DontForget.ID;
+    if (!source || source === owner) return false;
+
+    ui.notifications.error('DONT-FORGET.api.source-mismatch', { format: { source: owner } });
+    return true;
+  }
+
+  /**
    * Create a new reminder for a user
    * @param {string} userId - The user ID
    * @param {Object} reminderData - Initial reminder data
@@ -82,7 +97,8 @@ export class ReminderManager {
       label: reminderData.label || '',
       isDone: false,
       userId,
-      createdAt: Date.now()
+      createdAt: Date.now(),
+      source: reminderData.source || DontForget.ID
     };
 
     // Create an object with just this reminder to update flags
@@ -97,9 +113,10 @@ export class ReminderManager {
    * Update a specific reminder
    * @param {string} reminderId - The reminder ID
    * @param {Object} updateData - Data to update
+   * @param {string} [source] - Declared producer source; must match the reminder's own source
    * @returns {Promise} Promise for the flag operation
    */
-  static async updateReminder(reminderId, updateData) {
+  static async updateReminder(reminderId, updateData, source) {
     const allReminders = this.getAllReminders();
     const reminder = allReminders[reminderId];
 
@@ -121,6 +138,8 @@ export class ReminderManager {
       return null;
     }
 
+    if (this.#sourceBlocked(reminder, source)) return null;
+
     // Create update data for just this reminder
     const reminderUpdate = {
       [reminderId]: {
@@ -133,12 +152,23 @@ export class ReminderManager {
   }
 
   /**
+   * Mark a reminder as completed
+   * @param {string} reminderId - The reminder ID
+   * @param {string} [source] - Declared producer source; must match the reminder's own source
+   * @returns {Promise} Promise for the flag operation
+   */
+  static async completeReminder(reminderId, source) {
+    return this.updateReminder(reminderId, { isDone: true }, source);
+  }
+
+  /**
    * Delete a specific reminder
    * @param {string} reminderId - The reminder ID
    * @param {string} userId - The user ID who owns the reminder
+   * @param {string} [source] - Declared producer source; must match the reminder's own source
    * @returns {Promise} Promise for the flag operation
    */
-  static async deleteReminder(reminderId, userId) {
+  static async deleteReminder(reminderId, userId, source) {
     const user = game.users.get(userId);
     if (!user) {
       ATLAS.log(1, `User ${userId} not found`);
@@ -150,6 +180,9 @@ export class ReminderManager {
       ui.notifications.error(`${DontForget.TITLE} | You don't have permission to delete this reminder`);
       return null;
     }
+
+    const reminder = this.getUserReminders(userId)[reminderId];
+    if (reminder && this.#sourceBlocked(reminder, source)) return null;
 
     // Create deletion key in Foundry format
     const deletion = {
