@@ -2,7 +2,12 @@
   "name": "dont-forget",
   "version": "1.0.0",
   "description": "FoundryVTT Module",
-  "scripts": {},
+  "scripts": {
+    "build": "rollup -c rollup.config.mjs",
+    "build:watch": "rollup -c rollup.config.mjs --watch",
+    "dev": "rollup -c rollup.config.mjs --environment BUILD:development",
+    "clean": "node -e \"import('fs').then(f=>f.rmSync('dist',{recursive:true,force:true}))\""
+  },
   "author": "Tyler",
   "license": "MIT",
   "private": true,
@@ -12,9 +17,13 @@
   "homepage": "https://github.com/Sayshal/dont-forget#readme",
   "devDependencies": {
     "@eslint/js": "^9.11.1",
+    "@rollup/plugin-terser": "^1.0.0",
     "eslint": "^8.52.0",
     "globals": "^15.10.0",
     "prettier-eslint": "^16.1.2",
-    "prettier": "^3.1.0"
+    "prettier": "^3.1.0",
+    "rollup": "^4.59.0",
+    "rollup-plugin-copy": "^3.5.0",
+    "rollup-plugin-postcss": "^4.0.2"
   }
 }

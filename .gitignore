@@ -1,4 +1,5 @@
 *.code-workspace
+/dist
 /tests
 /foundry
 jsconfig.json

@@ -16,7 +16,7 @@
   "description": "A to-do list that lives in Foundry's player list, one click from wherever you are. Jot down plot hooks, character goals, or rules you keep meaning to look up, tick them off as you go, and clear the done ones in bulk. Each player's list stays private to them, while the GM sees everyone's, plus who wrote what.",
   "download": "",
   "esmodules": [
-    "scripts/dont-forget.js"
+    "dont-forget.mjs"
   ],
   "styles": [
     "styles/dont-forget.css"
