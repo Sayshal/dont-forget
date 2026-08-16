@@ -1,19 +1,17 @@
 /* stylelint-disable declaration-property-value-keyword-no-deprecated */
 
-/* Don't Forget Module Styles */
 .dont-forget {
-  /* Dialog styles - proper block layout */
   &.create-reminder-dialog,
   &.edit-reminder-dialog {
     .dialog-content {
-      padding: 1rem;
       min-width: 20rem;
+      padding: 1rem;
     }
 
     .reminder-form-field {
       display: block;
-      margin-bottom: 1rem;
       width: 100%;
+      margin-bottom: 1rem;
 
       &:last-child {
         margin-bottom: 0;
@@ -33,51 +31,62 @@
     textarea,
     select {
       display: block;
-      width: 100%;
-      font-family: inherit;
       box-sizing: border-box;
+      width: 100%;
       margin: 0;
+      font-family: inherit;
     }
 
     textarea {
       min-height: 6.25rem;
       resize: vertical;
     }
+
+    .due-date-control {
+      gap: 0.25rem;
+      display: flex;
+
+      .due-date-pick {
+        flex: 1;
+      }
+
+      .due-date-clear {
+        flex: none;
+        width: 2rem;
+      }
+    }
   }
 
-  /* Main application window - ensure full height usage */
   &:not(.create-reminder-dialog, .edit-reminder-dialog) {
     .window-content {
-      padding: 0;
       display: flex;
       flex-direction: column;
       height: 100%;
+      padding: 0;
     }
   }
 
-  /* Table container - full width and height */
   .reminder-container {
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
+    width: 100%;
     height: 100%;
     padding: 1rem;
-    width: 100%;
-    box-sizing: border-box;
 
     .reminder-table-container {
       flex: 1;
-      overflow-y: auto;
-      margin-bottom: 1rem;
       width: 100%;
+      margin-bottom: 1rem;
+      overflow-y: auto;
     }
 
-    /* Reminder table - fill container */
     .reminder-table {
       width: 100%;
+      margin: 0;
+      table-layout: auto;
       border-collapse: collapse;
       font-size: 0.9rem;
-      table-layout: auto;
-      margin: 0;
 
       th,
       td {
@@ -87,14 +96,13 @@
       }
 
       th {
-        font-weight: bold;
+        z-index: 1;
         position: sticky;
         top: 0;
-        z-index: 1;
+        font-weight: bold;
         white-space: nowrap;
       }
 
-      /* Column sizing - let them size naturally but with minimums */
       .col-status {
         width: 3.75rem;
         text-align: center;
@@ -106,14 +114,24 @@
         word-wrap: break-word;
 
         .reminder-text {
-          word-break: break-word;
           hyphens: auto;
+          word-break: break-word;
         }
       }
 
       .col-creator {
         min-width: 6.25rem;
         white-space: nowrap;
+      }
+
+      .col-due {
+        min-width: 6.25rem;
+        white-space: nowrap;
+
+        .due-date.due {
+          color: var(--color-level-warning);
+          font-weight: bold;
+        }
       }
 
       .col-created {
@@ -127,7 +145,6 @@
       }
     }
 
-    /* Reminder rows - fix hover contrast */
     .reminder-row {
       transition: all 0.2s ease;
 
@@ -140,10 +157,9 @@
       }
     }
 
-    /* Action buttons */
     .reminder-actions {
-      display: flex;
       gap: 0.25rem;
+      display: flex;
       justify-content: center;
 
       .reminder-edit,
@@ -151,35 +167,33 @@
         padding: 0.25rem;
         border: none;
         border-radius: 0.188rem;
+        font-size: 0.9rem;
         cursor: pointer;
         background: none;
         transition: color 0.2s ease;
-        font-size: 0.9rem;
 
         &:hover {
-          box-shadow: none;
           outline: none;
+          box-shadow: none;
         }
       }
     }
 
-    /* Empty state */
     .reminder-empty {
-      flex: 1;
       display: flex;
-      align-items: center;
+      flex: 1;
       justify-content: center;
+      align-items: center;
       padding: 1rem 0;
       font-style: italic;
       text-align: center;
     }
 
-    /* Footer area */
     .reminder-footer {
+      gap: 0.5rem;
       display: flex;
       justify-content: center;
       margin-top: auto;
-      gap: 0.5rem;
 
       .reminder-create,
       .reminder-delete-completed {
@@ -190,19 +204,17 @@
   }
 }
 
-/* Make sure the h3 header is flexbox to support margin-left: auto */
 #players h3[aria-label='Players'] {
+  gap: 0.25rem;
   display: flex;
   align-items: center;
-  gap: 0.25rem;
 
-  /* Header button styling */
   .dont-forget-header-button {
     margin-left: auto;
     color: var(--user-color);
+    font-size: 1rem;
     cursor: pointer;
     transition: all 0.2s ease;
-    font-size: 1rem;
 
     &:hover {
       text-shadow: 0 0 0.25rem var(--color-shadow-highlight);

@@ -4,6 +4,18 @@
     <textarea id="reminder-text" name="reminderText" {{#unless editMode}}placeholder="{{placeholderText}}" {{/unless}}
       autofocus>{{#if editMode}}{{initialText}}{{/if}}</textarea>
   </div>
+  {{#if showDueDate}}
+    <div class="reminder-form-field">
+      <label for="reminder-due-date">{{labels.dueDate}}</label>
+      <div class="due-date-control">
+        <input type="hidden" name="dueDate" value="{{initialDueDate}}">
+        <button type="button" id="reminder-due-date" class="due-date-pick">{{dueDateLabel}}</button>
+        <button type="button" class="due-date-clear" data-tooltip="{{labels.clearDueDate}}">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  {{/if}}
   {{#if isGM}}
     <div class="reminder-form-field">
       <label for="reminder-owner">{{labels.reminderOwner}}</label>

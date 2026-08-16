@@ -15,6 +15,11 @@
                 {{localize 'DONT-FORGET.table-headers.creator'}}
               </th>
             {{/if}}
+            {{#if showDueDate}}
+              <th class="col-due" data-tooltip="{{localize 'DONT-FORGET.table-headers.due-tooltip'}}">
+                {{localize 'DONT-FORGET.table-headers.due'}}
+              </th>
+            {{/if}}
             <th class="col-created" data-tooltip="{{localize 'DONT-FORGET.table-headers.created-tooltip'}}">
               {{localize 'DONT-FORGET.table-headers.created'}}
             </th>
@@ -36,6 +41,12 @@
               {{#if ../isGM}}
                 <td class="col-creator">
                   <span class="creator-name">{{creatorName}}</span>
+                </td>
+              {{/if}}
+              {{#if ../showDueDate}}
+                <td class="col-due">
+                  <span class="due-date {{#if isDue}}due{{/if}}"
+                    {{#if isDue}}data-tooltip="{{localize 'DONT-FORGET.due-date.arrived'}}" {{/if}}>{{dueText}}</span>
                 </td>
               {{/if}}
               <td class="col-created">

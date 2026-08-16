@@ -1,3 +1,4 @@
+import { formatDueDate, isCalendariaActive, NOTE_SYNC, readDueDate, registerDueDates, requestNote, wireDueDate } from './due-dates.js';
 import { ReminderManager } from './reminder-manager.js';
 import { registerSettings } from './settings.js';
 
@@ -28,6 +29,9 @@ export class DontForget {
     REMINDER_COMPLETED: 'dontForget.reminderCompleted'
   };
 
+  /** @type {object} ATLAS registration handle, used to relay backing-note requests to the GM */
+  static atlas;
+
   /** @type {Map<string, object>} Last-seen reminders per user, used to classify flag changes */
   static #lastSeen = new Map();
 
@@ -35,9 +39,10 @@ export class DontForget {
    * Initialize the module
    */
   static initialize() {
-    ATLAS.register('dont-forget', { title: this.TITLE, github: 'Sayshal/dont-forget' });
+    this.atlas = ATLAS.register('dont-forget', { title: this.TITLE, github: 'Sayshal/dont-forget', events: [{ name: NOTE_SYNC, gmAuthoritative: true }] });
     ATLAS.log(3, 'Initializing module');
     registerSettings();
+    registerDueDates();
     this.reminderApp = new ReminderApp();
     game.modules.get(this.ID).api = ReminderManager;
     globalThis.DONTFORGET = { api: ReminderManager };
@@ -172,7 +177,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Set which user's reminders to view
-   * @param userId ID of viewing user (game.user.id)
+   * @param {string} userId - The user ID whose reminders to view
    */
   setViewingUser(userId) {
     this.viewingUserId = userId;
@@ -201,8 +206,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Add event listeners after rendering
-   * @param context Application context.
-   * @param options Additional application options.
+   * @param {object} context - Application context
+   * @param {object} options - Additional application options
    */
   _onRender(context, options) {
     super._onRender(context, options);
@@ -215,7 +220,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Handle checkbox changes immediately
-   * @param event Event triggering checkbox change
+   * @param {Event} event - Event triggering the checkbox change
    */
   async _onCheckboxChange(event) {
     const checkbox = event.target;
@@ -247,7 +252,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Prepare context data for rendering the template
-   * @returns Application context
+   * @returns {object} Application context
    */
   _prepareContext() {
     const rawReminders = ReminderManager.getReminders(this.viewingUserId);
@@ -260,7 +265,9 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         ...reminder,
         creatorName: user ? user.name : '',
         createdTime: reminder.createdAt ? foundry.utils.timeSince(reminder.createdAt) : '',
-        completed: reminder.isDone
+        completed: reminder.isDone,
+        dueText: formatDueDate(reminder.dueDate),
+        isDue: reminder.isDue && !reminder.isDone
       };
     });
 
@@ -289,14 +296,15 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       reminders: sortedReminders,
       isGM: game.user.isGM,
       showGMColumns: game.user.isGM,
+      showDueDate: isCalendariaActive(),
       hasReminders: sortedReminders.length > 0
     };
   }
 
   /**
    * Create a new reminder for the currently viewed user
-   * @param event Event triggering reminder creation dialog
-   * @param target Target button class.
+   * @param {Event} event - Event triggering the reminder creation dialog
+   * @param {HTMLElement} target - The clicked button
    */
   static async createReminder(event, target) {
     const app = DontForget.reminderApp;
@@ -306,9 +314,9 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Create a new reminder for a specific user
-   * @param _event Event triggering reminder creation dialog
-   * @param _target Target button class.
-   * @param targetUserId Intended user to create reminder for.
+   * @param {Event} _event - Event triggering the reminder creation dialog
+   * @param {HTMLElement} _target - The clicked button
+   * @param {string} targetUserId - The user the reminder is created for
    */
   static async createReminderForUser(_event, _target, targetUserId) {
     const placeholderText = _loc('DONT-FORGET.reminder-placeholder');
@@ -318,9 +326,13 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const templateData = {
       isGM: game.user.isGM,
       placeholderText: placeholderText,
+      showDueDate: isCalendariaActive(),
+      dueDateLabel: _loc('DONT-FORGET.due-date.pick'),
       labels: {
         reminderText: _loc('DONT-FORGET.reminder-text'),
-        reminderOwner: _loc('DONT-FORGET.reminder-owner')
+        reminderOwner: _loc('DONT-FORGET.reminder-owner'),
+        dueDate: _loc('DONT-FORGET.due-date.label'),
+        clearDueDate: _loc('DONT-FORGET.due-date.clear')
       },
       users: []
     };
@@ -351,23 +363,26 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
           return {
             reminderText: reminderText || placeholderText,
-            reminderOwner: reminderOwner
+            reminderOwner: reminderOwner,
+            dueDate: readDueDate(button.form)
           };
         }
       },
-      modal: true,
+      render: (_event, dialog) => wireDueDate(dialog.element),
       rejectClose: false,
       classes: [DontForget.ID, 'create-reminder-dialog']
     });
 
     if (result && result.reminderText) {
       const reminderData = {
-        label: result.reminderText
+        label: result.reminderText,
+        dueDate: result.dueDate
       };
 
       const ownerId = game.user.isGM && result.reminderOwner ? result.reminderOwner : targetUserId;
 
-      await ReminderManager.createReminder(ownerId, reminderData);
+      const reminder = await ReminderManager.createReminder(ownerId, reminderData);
+      if (reminder?.dueDate) requestNote({ action: 'create', reminderId: reminder.id, userId: ownerId, label: reminder.label, dueDate: reminder.dueDate });
       ui.notifications.info('DONT-FORGET.reminder-created');
 
       // Get the app instance and render it
@@ -379,8 +394,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
   /**
    * Delete a reminder
-   * @param _event Event triggering delete dialog
-   * @param target Target of dialog button
+   * @param {Event} _event - Event triggering the delete dialog
+   * @param {HTMLElement} target - The clicked button
    */
   static async deleteReminder(_event, target) {
     const reminderElement = target.closest('[data-reminder-id]');
@@ -407,14 +422,15 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     if (confirmed) {
       await ReminderManager.deleteReminder(reminderId, reminder.userId);
+      if (reminder.noteId) requestNote({ action: 'delete', noteId: reminder.noteId });
       this.render();
     }
   }
 
   /**
    * Edit an existing reminder using DialogV2
-   * @param _event Event triggering event dialog
-   * @param target Target of dialog button
+   * @param {Event} _event - Event triggering the edit dialog
+   * @param {HTMLElement} target - The clicked button
    */
   static async editReminder(_event, target) {
     const reminderElement = target.closest('[data-reminder-id]');
@@ -439,9 +455,14 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       isGM: game.user.isGM,
       editMode: true,
       initialText: reminder.label,
+      showDueDate: isCalendariaActive(),
+      initialDueDate: reminder.dueDate ? JSON.stringify(reminder.dueDate) : '',
+      dueDateLabel: formatDueDate(reminder.dueDate) || _loc('DONT-FORGET.due-date.pick'),
       labels: {
         reminderText: _loc('DONT-FORGET.reminder-text'),
-        reminderOwner: _loc('DONT-FORGET.reminder-owner')
+        reminderOwner: _loc('DONT-FORGET.reminder-owner'),
+        dueDate: _loc('DONT-FORGET.due-date.label'),
+        clearDueDate: _loc('DONT-FORGET.due-date.clear')
       },
       users: []
     };
@@ -472,30 +493,41 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
           return {
             reminderText: reminderText,
-            reminderOwner: reminderOwner
+            reminderOwner: reminderOwner,
+            dueDate: readDueDate(button.form)
           };
         }
       },
-      modal: true,
+      render: (_event, dialog) => wireDueDate(dialog.element),
       rejectClose: false,
       classes: [DontForget.ID, 'edit-reminder-dialog']
     });
 
     if (result && result.reminderText) {
-      const updateData = {
-        label: result.reminderText
-      };
+      const dueDate = result.dueDate;
+      const dateChanged = JSON.stringify(dueDate) !== JSON.stringify(reminder.dueDate ?? null);
 
       if (game.user.isGM && result.reminderOwner && result.reminderOwner !== reminder.userId) {
+        // The backing note delivers to the old owner, so it is replaced rather than carried over
         const newOwnerId = result.reminderOwner;
         await ReminderManager.deleteReminder(reminderId, reminder.userId);
+        if (reminder.noteId) requestNote({ action: 'delete', noteId: reminder.noteId });
         const newReminderData = {
           label: result.reminderText,
-          isDone: reminder.isDone
+          isDone: reminder.isDone,
+          dueDate
         };
-        await ReminderManager.createReminder(newOwnerId, newReminderData);
+        const created = await ReminderManager.createReminder(newOwnerId, newReminderData);
+        if (created?.dueDate) requestNote({ action: 'create', reminderId: created.id, userId: newOwnerId, label: created.label, dueDate });
       } else {
+        const updateData = { label: result.reminderText, dueDate };
+        if (dateChanged) updateData.isDue = false;
+        if (!dueDate) updateData.noteId = null;
         await ReminderManager.updateReminder(reminderId, updateData);
+
+        if (!dueDate && reminder.noteId) requestNote({ action: 'delete', noteId: reminder.noteId });
+        else if (dueDate && reminder.noteId) requestNote({ action: 'update', noteId: reminder.noteId, label: result.reminderText, dueDate });
+        else if (dueDate) requestNote({ action: 'create', reminderId, userId: reminder.userId, label: result.reminderText, dueDate });
       }
 
       ui.notifications.info('Reminder updated successfully!');
@@ -527,6 +559,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (confirmed) {
       for (const reminder of completedReminders) {
         await ReminderManager.deleteReminder(reminder.id, reminder.userId);
+        if (reminder.noteId) requestNote({ action: 'delete', noteId: reminder.noteId });
       }
       this.render();
     }
