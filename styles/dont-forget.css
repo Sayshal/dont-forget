@@ -4,6 +4,12 @@
     .dialog-content {
       min-width: 22rem;
 
+      .reminder-form {
+        gap: var(--spacer-16);
+        display: flex;
+        flex-direction: column;
+      }
+
       textarea {
         resize: vertical;
       }
@@ -33,8 +39,8 @@
     input:not([type='checkbox']),
     textarea,
     select {
-      color: var(--atlas-text, rgb(224 224 224));
       border: 0.0625rem solid var(--atlas-border, rgb(74 74 74));
+      color: var(--atlas-text, rgb(224 224 224));
       background: var(--atlas-input-bg, rgb(48 48 48));
 
       &::placeholder {
@@ -42,8 +48,8 @@
       }
 
       &:focus {
-        outline: none;
         border-color: var(--atlas-primary, rgb(74 144 226));
+        outline: none;
         box-shadow: none;
       }
     }
@@ -61,8 +67,8 @@
     }
 
     button {
-      color: var(--atlas-button-text, rgb(224 224 224));
       border: 0.0625rem solid var(--atlas-button-border, rgb(74 74 74));
+      color: var(--atlas-button-text, rgb(224 224 224));
       background: var(--atlas-button-bg, rgb(48 48 48));
 
       &:hover {

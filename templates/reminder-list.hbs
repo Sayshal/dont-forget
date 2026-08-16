@@ -1,46 +1,40 @@
 <div class="reminder-container {{#if hideCompleted}}hide-completed{{/if}}">
   <div class="reminder-toolbar">
     <search class="reminder-search">
-      <input type="search" name="filter" value="{{filter}}" placeholder="{{localize 'DONT-FORGET.filter-placeholder'}}"
+      <input type="search" name="filter" value="{{filter}}" placeholder="{{localize 'DONTFORGET.List.Filter'}}"
         autocomplete="off">
     </search>
-
     {{#if isGM}}
-      <select name="viewUser" data-tooltip="{{localize 'DONT-FORGET.view-user'}}">
-        <option value="" {{#unless viewingUserId}}selected{{/unless}}>{{localize 'DONT-FORGET.all-users'}}</option>
+      <select name="viewUser" data-tooltip="DONTFORGET.List.ViewUser">
+        <option value="" {{#unless viewingUserId}}selected{{/unless}}>{{localize 'DONTFORGET.Window.AllUsers'}}</option>
         {{#each users}}
           <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
         {{/each}}
       </select>
     {{/if}}
-
     <button type="button" class="reminder-toggle-completed icon" data-action="toggle-completed"
       aria-pressed="{{#if hideCompleted}}true{{else}}false{{/if}}"
-      data-tooltip="{{#if hideCompleted}}{{localize 'DONT-FORGET.show-completed'}}{{else}}{{localize 'DONT-FORGET.hide-completed'}}{{/if}}">
+      data-tooltip="{{#if hideCompleted}}DONTFORGET.List.ShowCompleted{{else}}DONTFORGET.List.HideCompleted{{/if}}">
       <i class="fas {{#if hideCompleted}}fa-eye-slash{{else}}fa-eye{{/if}}"></i>
     </button>
-
     <button type="button" class="reminder-delete-completed icon" data-action="delete-completed"
-      data-tooltip="{{localize 'DONT-FORGET.delete-completed-tooltip'}}">
+      data-tooltip="DONTFORGET.List.DeleteCompleted">
       <i class="fas fa-broom"></i>
     </button>
   </div>
-
   {{#if hasReminders}}
     <ol class="reminder-list">
       {{#each reminders}}
         <li class="reminder{{#if isDone}} is-done{{/if}}{{#if isDue}} is-due{{/if}}" data-reminder-id="{{id}}">
           <input type="checkbox" class="reminder-checkbox" {{#if isDone}}checked{{/if}}
-            data-tooltip="{{localize 'DONT-FORGET.mark-done'}}">
-
+            data-tooltip="DONTFORGET.Reminder.MarkDone">
           <div class="reminder-body">
             <span class="reminder-label" data-action="inline-edit"
-              data-tooltip="{{localize 'DONT-FORGET.edit-inline'}}">{{label}}</span>
-
+              data-tooltip="DONTFORGET.Reminder.Rename">{{label}}</span>
             <div class="reminder-meta">
               {{#if dueText}}
                 <span class="reminder-due"
-                  data-tooltip="{{#if isDue}}{{localize 'DONT-FORGET.due-date.arrived'}}{{else}}{{localize 'DONT-FORGET.table-headers.due-tooltip'}}{{/if}}">
+                  data-tooltip="{{#if isDue}}DONTFORGET.Due.Arrived{{else}}DONTFORGET.Due.Tooltip{{/if}}">
                   <i class="fas fa-calendar-day"></i>{{dueText}}
                 </span>
               {{/if}}
@@ -50,14 +44,11 @@
               <span class="reminder-created">{{createdTime}}</span>
             </div>
           </div>
-
           <div class="reminder-controls">
-            <button type="button" class="icon" data-action="edit"
-              data-tooltip="{{localize 'DONT-FORGET.edit-reminder'}}">
+            <button type="button" class="icon" data-action="edit" data-tooltip="DONTFORGET.Reminder.Edit">
               <i class="fas fa-pen"></i>
             </button>
-            <button type="button" class="icon" data-action="delete"
-              data-tooltip="{{localize 'DONT-FORGET.delete-reminder'}}">
+            <button type="button" class="icon" data-action="delete" data-tooltip="DONTFORGET.Reminder.Delete">
               <i class="fas fa-trash"></i>
             </button>
           </div>
@@ -65,13 +56,11 @@
       {{/each}}
     </ol>
   {{else}}
-    <p class="reminder-empty">{{localize 'DONT-FORGET.no-reminders'}}</p>
+    <p class="reminder-empty">{{localize 'DONTFORGET.List.Empty'}}</p>
   {{/if}}
-
   <div class="reminder-add">
-    <input type="text" name="quickAdd" placeholder="{{localize 'DONT-FORGET.quick-add-placeholder'}}"
-      autocomplete="off">
-    <button type="button" class="icon" data-action="create" data-tooltip="{{localize 'DONT-FORGET.more-options'}}">
+    <input type="text" name="quickAdd" placeholder="{{localize 'DONTFORGET.List.QuickAdd'}}" autocomplete="off">
+    <button type="button" class="icon" data-action="create" data-tooltip="DONTFORGET.List.MoreOptions">
       <i class="fas fa-sliders"></i>
     </button>
   </div>

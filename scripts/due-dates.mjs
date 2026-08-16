@@ -1,8 +1,8 @@
-import { DontForget } from './dont-forget.js';
-import { ReminderManager } from './reminder-manager.js';
+import { MODULE } from './constants.mjs';
+import { ReminderManager } from './reminder-manager.mjs';
 
-/** @type {string} Relay event carrying a backing-note request for the active GM to execute. */
-export const NOTE_SYNC = 'dontForget.noteSync';
+/** @type {object|undefined} ATLAS registration handle, the only route to the relay. */
+let relay;
 
 /**
  * Whether Calendaria is installed and active, guarding access to its global namespace
@@ -17,7 +17,7 @@ export function isCalendariaActive() {
  * @returns {boolean} True when Calendaria is active and the world has due dates switched on
  */
 export function dueDatesEnabled() {
-  return isCalendariaActive() && game.settings.get(DontForget.ID, DontForget.SETTINGS.DUE_DATES);
+  return isCalendariaActive() && game.settings.get(MODULE.ID, MODULE.SETTINGS.DUE_DATES);
 }
 
 /**
@@ -62,17 +62,14 @@ function reminderForNote(noteId) {
  */
 async function syncNote(request) {
   if (!game.users.activeGM?.isSelf) return;
-
   if (request.action === 'delete') {
     await CALENDARIA.api.deleteNote(request.noteId);
     return;
   }
-
   if (request.action === 'update') {
     await CALENDARIA.api.updateNote(request.noteId, { name: request.label, startDate: request.dueDate });
     return;
   }
-
   const note = await CALENDARIA.api.createNote({
     name: request.label,
     startDate: request.dueDate,
@@ -98,10 +95,10 @@ export function requestNote(request) {
     return;
   }
   if (!game.users.activeGM) {
-    ui.notifications.warn('DONT-FORGET.due-date.no-gm', { localize: true });
+    ui.notifications.warn('DONTFORGET.Due.NoGM', { localize: true });
     return;
   }
-  DontForget.atlas?.broadcast(NOTE_SYNC, request);
+  relay?.broadcast(MODULE.NOTE_SYNC, request);
 }
 
 /**
@@ -127,25 +124,23 @@ function onNoteDeleted(noteId) {
 }
 
 /**
- * Wire the due-date control in a create or edit dialog
+ * Wire the due-date picker in a create or edit dialog
  * @param {HTMLElement} html - The dialog element
  * @returns {void}
  */
 export function wireDueDate(html) {
   const input = html.querySelector('input[name="dueDate"]');
   if (!input) return;
-
-  const button = html.querySelector('.due-date-pick');
-  button.addEventListener('click', async () => {
+  const pickButton = html.querySelector('.due-date-pick');
+  pickButton.addEventListener('click', async () => {
     const picked = await CALENDARIA.api.showDatePicker({ date: input.value ? JSON.parse(input.value) : undefined });
     if (!picked) return;
     input.value = JSON.stringify(picked);
-    button.textContent = CALENDARIA.api.formatDate(picked);
+    pickButton.textContent = CALENDARIA.api.formatDate(picked);
   });
-
   html.querySelector('.due-date-clear').addEventListener('click', () => {
     input.value = '';
-    button.textContent = _loc('DONT-FORGET.due-date.pick');
+    pickButton.textContent = _loc('DONTFORGET.Due.Pick');
   });
 }
 
@@ -161,12 +156,13 @@ export function readDueDate(form) {
 
 /**
  * Wire the GM-side note writer and the Calendaria listeners
+ * @param {object} atlas - The module's ATLAS registration handle, used to relay note requests
  * @returns {void}
  */
-export function registerDueDates() {
+export function registerDueDates(atlas) {
+  relay = atlas;
   if (!isCalendariaActive()) return;
-
-  Hooks.on(NOTE_SYNC, syncNote);
+  Hooks.on(MODULE.NOTE_SYNC, syncNote);
   Hooks.on('calendaria.eventTriggered', onEventTriggered);
   Hooks.on('calendaria.noteDeleted', onNoteDeleted);
 }

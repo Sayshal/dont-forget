@@ -1,11 +1,11 @@
-import { DontForget } from './dont-forget.js';
+import { MODULE } from './constants.mjs';
 
 /**
  * @typedef {object} Reminder
  * @property {string} id - Unique identifier
  * @property {string} label - Reminder text
  * @property {boolean} isDone - Completion status
- * @property {string} userId - User who created the reminder
+ * @property {string} userId - User the reminder belongs to
  * @property {number} [createdAt] - Creation timestamp
  * @property {string} [source] - Module id that produced the reminder
  * @property {string|null} [ref] - The producer's own key for whatever the reminder is about
@@ -15,56 +15,40 @@ import { DontForget } from './dont-forget.js';
  */
 
 /**
- * Manages reminder data and persistence
+ * Reads and writes reminder records, which persist as flags on the user they belong to.
  */
 export class ReminderManager {
   /**
-   * Get reminders for a specific user or all reminders for GM
+   * Get reminders for a user, or every reminder in the world when that user is a GM
    * @param {string} userId - The user ID to get reminders for
    * @returns {Object<string, Reminder>} Dictionary of reminders
    */
   static getReminders(userId) {
     const user = game.users.get(userId);
-
     if (!user) {
       ATLAS.log(1, `User with ID ${userId} not found`);
       return {};
     }
-
-    // GMs see all reminders
-    if (user.isGM) {
-      return this.getAllReminders();
-    }
-
-    // Regular users only see their own
-    return this.getUserReminders(userId);
+    return user.isGM ? this.getAllReminders() : this.getUserReminders(userId);
   }
 
   /**
-   * Get all reminders across all users
+   * Get every reminder across all users
    * @returns {Object<string, Reminder>} Dictionary of all reminders
    */
   static getAllReminders() {
-    const allReminders = {};
-
-    game.users.forEach((user) => {
-      const userReminders = this.getUserReminders(user.id);
-      Object.assign(allReminders, userReminders);
-    });
-
-    return allReminders;
+    const all = {};
+    game.users.forEach((user) => Object.assign(all, this.getUserReminders(user.id)));
+    return all;
   }
 
   /**
-   * Get reminders for a specific user
+   * Get the reminders belonging to one user
    * @param {string} userId - The user ID
-   * @returns {Object<string, Reminder>} Dictionary of user's reminders
+   * @returns {Object<string, Reminder>} Dictionary of that user's reminders
    */
   static getUserReminders(userId) {
-    const user = game.users.get(userId);
-    if (!user) return {};
-
-    return user.getFlag(DontForget.ID, DontForget.FLAGS.REMINDERS) || {};
+    return game.users.get(userId)?.getFlag(MODULE.ID, MODULE.FLAGS.REMINDERS) || {};
   }
 
   /**
@@ -78,11 +62,19 @@ export class ReminderManager {
    */
   static findReminders({ source, ref, userId, isDone } = {}) {
     const pool = userId ? this.getUserReminders(userId) : this.getAllReminders();
-
     return Object.values(pool).filter(
       (reminder) =>
-        (source === undefined || (reminder.source || DontForget.ID) === source) && (ref === undefined || (reminder.ref ?? null) === ref) && (isDone === undefined || !!reminder.isDone === isDone)
+        (source === undefined || (reminder.source || MODULE.ID) === source) && (ref === undefined || (reminder.ref ?? null) === ref) && (isDone === undefined || !!reminder.isDone === isDone)
     );
+  }
+
+  /**
+   * Whether the current user may write to another user's reminders
+   * @param {string} userId - Owner of the reminders being written
+   * @returns {boolean} True when the write is permitted
+   */
+  static #canWrite(userId) {
+    return game.user.id === userId || game.user.isGM;
   }
 
   /**
@@ -92,88 +84,70 @@ export class ReminderManager {
    * @returns {boolean} True when the action must be refused
    */
   static #sourceBlocked(reminder, source) {
-    const owner = reminder.source || DontForget.ID;
+    const owner = reminder.source || MODULE.ID;
     if (!source || source === owner) return false;
-
-    ui.notifications.error('DONT-FORGET.api.source-mismatch', { format: { source: owner } });
+    ui.notifications.error('DONTFORGET.Api.SourceMismatch', { format: { source: owner } });
     return true;
   }
 
   /**
-   * Create a new reminder for a user
-   * @param {string} userId - The user ID
+   * Create a reminder for a user
+   * @param {string} userId - The user the reminder belongs to
    * @param {object} reminderData - Initial reminder data
    * @returns {Promise<Reminder|null>} The created reminder record
    */
   static async createReminder(userId, reminderData = {}) {
     const user = game.users.get(userId);
     if (!user) {
-      ui.notifications.error(`${DontForget.TITLE} | Cannot create reminder: User not found`);
+      ui.notifications.error('DONTFORGET.Api.UserNotFound');
       return null;
     }
-
-    if (game.user.id !== userId && !game.user.isGM) {
-      ui.notifications.error(`${DontForget.TITLE} | You don't have permission to create reminders for another user`);
+    if (!this.#canWrite(userId)) {
+      ui.notifications.error('DONTFORGET.Api.NoCreatePermission');
       return null;
     }
-
-    const id = foundry.utils.randomID(16);
 
     const reminder = {
-      id,
+      id: foundry.utils.randomID(16),
       label: reminderData.label || '',
       isDone: false,
       userId,
       createdAt: Date.now(),
-      source: reminderData.source || DontForget.ID,
+      source: reminderData.source || MODULE.ID,
       ref: reminderData.ref ?? null,
       dueDate: reminderData.dueDate ?? null,
       noteId: reminderData.noteId ?? null,
       isDue: false
     };
 
-    // Create an object with just this reminder to update flags
-    const updateData = {
-      [id]: reminder
-    };
-
-    await user.setFlag(DontForget.ID, DontForget.FLAGS.REMINDERS, updateData);
+    await user.setFlag(MODULE.ID, MODULE.FLAGS.REMINDERS, { [reminder.id]: reminder });
     return reminder;
   }
 
   /**
-   * Update a specific reminder
+   * Apply a partial update to a reminder
    * @param {string} reminderId - The reminder ID
-   * @param {object} updateData - Data to update
+   * @param {object} updateData - The keys to change
    * @param {string} [source] - Declared producer source; must match the reminder's own source
    * @returns {Promise} Promise for the flag operation
    */
   static async updateReminder(reminderId, updateData, source) {
-    const allReminders = this.getAllReminders();
-    const reminder = allReminders[reminderId];
-
+    const reminder = this.getAllReminders()[reminderId];
     if (!reminder) {
       ATLAS.log(1, `Reminder with ID ${reminderId} not found`);
       return null;
     }
-
-    // Get the owner user
     const user = game.users.get(reminder.userId);
     if (!user) {
       ATLAS.log(1, `User ${reminder.userId} not found`);
       return null;
     }
-
-    // Only update if user is owner or GM
-    if (game.user.id !== reminder.userId && !game.user.isGM) {
-      ui.notifications.error(`${DontForget.TITLE} | You don't have permission to update this reminder`);
+    if (!this.#canWrite(reminder.userId)) {
+      ui.notifications.error('DONTFORGET.Api.NoUpdatePermission');
       return null;
     }
-
     if (this.#sourceBlocked(reminder, source)) return null;
-
-    // Write only the changed keys; the flag update merges them into the stored record
-    return user.setFlag(DontForget.ID, DontForget.FLAGS.REMINDERS, { [reminderId]: updateData });
+    return user.setFlag(MODULE.ID, MODULE.FLAGS.REMINDERS, { [reminderId]: updateData });
   }
 
   /**
@@ -187,9 +161,9 @@ export class ReminderManager {
   }
 
   /**
-   * Delete a specific reminder
+   * Delete one reminder
    * @param {string} reminderId - The reminder ID
-   * @param {string} userId - The user ID who owns the reminder
+   * @param {string} userId - The user the reminder belongs to
    * @param {string} [source] - Declared producer source; must match the reminder's own source
    * @returns {Promise} Promise for the flag operation
    */
@@ -199,13 +173,13 @@ export class ReminderManager {
       ATLAS.log(1, `User ${userId} not found`);
       return null;
     }
-    if (game.user.id !== userId && !game.user.isGM) {
-      ui.notifications.error(`${DontForget.TITLE} | You don't have permission to delete this reminder`);
+    if (!this.#canWrite(userId)) {
+      ui.notifications.error('DONTFORGET.Api.NoDeletePermission');
       return null;
     }
     const reminder = this.getUserReminders(userId)[reminderId];
     if (reminder && this.#sourceBlocked(reminder, source)) return null;
-    return user.setFlag(DontForget.ID, DontForget.FLAGS.REMINDERS, { [reminderId]: _del });
+    return user.setFlag(MODULE.ID, MODULE.FLAGS.REMINDERS, { [reminderId]: _del });
   }
 
   /**
@@ -221,22 +195,20 @@ export class ReminderManager {
       if (!byUser.has(reminder.userId)) byUser.set(reminder.userId, {});
       byUser.get(reminder.userId)[reminder.id] = _del;
     }
-
     let deleted = 0;
-    for (const [userId, updates] of byUser) {
+    for (const [userId, removals] of byUser) {
       const user = game.users.get(userId);
       if (!user) {
         ATLAS.log(1, `User ${userId} not found`);
         continue;
       }
-      if (game.user.id !== userId && !game.user.isGM) {
-        ui.notifications.error(`${DontForget.TITLE} | You don't have permission to delete this reminder`);
+      if (!this.#canWrite(userId)) {
+        ui.notifications.error('DONTFORGET.Api.NoDeletePermission');
         continue;
       }
-      await user.setFlag(DontForget.ID, DontForget.FLAGS.REMINDERS, updates);
-      deleted += Object.keys(updates).length;
+      await user.setFlag(MODULE.ID, MODULE.FLAGS.REMINDERS, removals);
+      deleted += Object.keys(removals).length;
     }
-
     return deleted;
   }
 }
