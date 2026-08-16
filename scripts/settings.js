@@ -13,4 +13,14 @@ export function registerSettings() {
     default: true,
     onChange: () => ui.players.render()
   });
+
+  game.settings.register(DontForget.ID, DontForget.SETTINGS.DUE_DATES, {
+    name: `DONT-FORGET.settings.${DontForget.SETTINGS.DUE_DATES}.Name`,
+    hint: `DONT-FORGET.settings.${DontForget.SETTINGS.DUE_DATES}.Hint`,
+    scope: 'world',
+    config: true,
+    type: Boolean,
+    default: true,
+    onChange: () => DontForget.reminderApp?.render()
+  });
 }

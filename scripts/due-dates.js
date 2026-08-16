@@ -13,6 +13,24 @@ export function isCalendariaActive() {
 }
 
 /**
+ * Whether due dates are offered.
+ * @returns {boolean} True when Calendaria is active and the world has due dates switched on
+ */
+export function dueDatesEnabled() {
+  return isCalendariaActive() && game.settings.get(DontForget.ID, DontForget.SETTINGS.DUE_DATES);
+}
+
+/**
+ * Order two in-world due dates, oldest first
+ * @param {object} a - Due date {year, month, day}
+ * @param {object} b - Due date {year, month, day}
+ * @returns {number} Sort comparison
+ */
+export function compareDueDate(a, b) {
+  return a.year - b.year || a.month - b.month || a.day - b.day;
+}
+
+/**
  * Format an in-world due date for display
  * @param {object} [dueDate] - Due date {year, month, day}
  * @returns {string} Formatted date, or an empty string when there is no date
@@ -74,7 +92,7 @@ async function syncNote(request) {
  * @returns {void}
  */
 export function requestNote(request) {
-  if (!isCalendariaActive()) return;
+  if (!dueDatesEnabled()) return;
   if (game.users.activeGM?.isSelf) {
     syncNote(request);
     return;

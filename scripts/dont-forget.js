@@ -1,4 +1,4 @@
-import { formatDueDate, isCalendariaActive, NOTE_SYNC, readDueDate, registerDueDates, requestNote, wireDueDate } from './due-dates.js';
+import { compareDueDate, dueDatesEnabled, formatDueDate, NOTE_SYNC, readDueDate, registerDueDates, requestNote, wireDueDate } from './due-dates.js';
 import { ReminderManager } from './reminder-manager.js';
 import { registerSettings } from './settings.js';
 
@@ -12,7 +12,7 @@ export class DontForget {
   static TITLE = "Don't Forget!";
   static FLAGS = { REMINDERS: 'reminders' };
   static TEMPLATES = { REMINDER_LIST: `modules/${this.ID}/templates/reminder-list.hbs`, CREATE_REMINDER_FORM: `modules/${this.ID}/templates/create-reminder.hbs` };
-  static SETTINGS = { INJECT_BUTTON: 'inject-button' };
+  static SETTINGS = { INJECT_BUTTON: 'inject-button', DUE_DATES: 'due-dates' };
   static HOOKS = { REMINDER_CREATED: 'dontForget.reminderCreated', REMINDER_COMPLETED: 'dontForget.reminderCompleted', REMINDER_DELETED: 'dontForget.reminderDeleted' };
   static atlas;
   static #lastSeen = new Map();
@@ -265,6 +265,12 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
 
     const sortedReminders = processedReminders.sort((a, b) => {
       if (a.isDone !== b.isDone) return a.isDone ? 1 : -1;
+      if (a.isDue !== b.isDue) return a.isDue ? -1 : 1;
+      if (!!a.dueDate !== !!b.dueDate) return a.dueDate ? -1 : 1;
+      if (a.dueDate && b.dueDate) {
+        const byDate = compareDueDate(a.dueDate, b.dueDate);
+        if (byDate) return byDate;
+      }
       if (game.user.isGM && a.userId !== b.userId) return a.creatorName.localeCompare(b.creatorName);
       if (a.createdAt && b.createdAt) return b.createdAt - a.createdAt;
       return a.id.localeCompare(b.id);
@@ -273,7 +279,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       reminders: sortedReminders,
       isGM: game.user.isGM,
       showCreator: game.user.isGM && !this.viewingUserId,
-      showDueDate: isCalendariaActive(),
+      showDueDate: dueDatesEnabled(),
       hasReminders: sortedReminders.length > 0,
       hideCompleted: this.hideCompleted,
       filter: this.filter,
@@ -356,7 +362,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       isGM: game.user.isGM,
       initialText,
       placeholderText: placeholderText,
-      showDueDate: isCalendariaActive(),
+      showDueDate: dueDatesEnabled(),
       dueDateLabel: _loc('DONT-FORGET.due-date.pick'),
       labels: {
         reminderText: _loc('DONT-FORGET.reminder-text'),
@@ -468,7 +474,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       isGM: game.user.isGM,
       editMode: true,
       initialText: reminder.label,
-      showDueDate: isCalendariaActive(),
+      showDueDate: dueDatesEnabled(),
       initialDueDate: reminder.dueDate ? JSON.stringify(reminder.dueDate) : '',
       dueDateLabel: formatDueDate(reminder.dueDate) || _loc('DONT-FORGET.due-date.pick'),
       labels: {

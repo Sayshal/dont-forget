@@ -29,6 +29,47 @@
     padding: 0.5rem;
     color: var(--atlas-text, inherit);
     background: var(--atlas-bg, transparent);
+
+    input:not([type='checkbox']),
+    textarea,
+    select {
+      color: var(--atlas-text, rgb(224 224 224));
+      border: 0.0625rem solid var(--atlas-border, rgb(74 74 74));
+      background: var(--atlas-input-bg, rgb(48 48 48));
+
+      &::placeholder {
+        color: var(--atlas-text-dim, rgb(136 136 136));
+      }
+
+      &:focus {
+        outline: none;
+        border-color: var(--atlas-primary, rgb(74 144 226));
+        box-shadow: none;
+      }
+    }
+
+    select option {
+      color: var(--atlas-text, rgb(224 224 224));
+      background: var(--atlas-bg, rgb(31 31 31));
+    }
+
+    input[type='checkbox'] {
+      --checkbox-background-color: var(--atlas-input-bg, rgb(48 48 48));
+      --checkbox-border-color: var(--atlas-border, rgb(74 74 74));
+      --checkbox-checked-color: var(--atlas-primary, rgb(74 144 226));
+      --checkbox-checkmark-color: var(--atlas-text-on-color, rgb(255 255 255));
+    }
+
+    button {
+      color: var(--atlas-button-text, rgb(224 224 224));
+      border: 0.0625rem solid var(--atlas-button-border, rgb(74 74 74));
+      background: var(--atlas-button-bg, rgb(48 48 48));
+
+      &:hover {
+        color: var(--atlas-text-heading, rgb(238 238 238));
+        background: var(--atlas-button-hover, rgb(58 58 58));
+      }
+    }
   }
 
   .reminder-container {
@@ -197,7 +238,7 @@
     width: 2rem;
   }
 
-  .reminder-delete-completed:hover {
+  button.reminder-delete-completed:hover {
     color: var(--atlas-error, inherit);
   }
 }
