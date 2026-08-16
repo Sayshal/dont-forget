@@ -207,4 +207,36 @@ export class ReminderManager {
     if (reminder && this.#sourceBlocked(reminder, source)) return null;
     return user.setFlag(DontForget.ID, DontForget.FLAGS.REMINDERS, { [reminderId]: _del });
   }
+
+  /**
+   * Delete several reminders with one flag write per owning user
+   * @param {Reminder[]} reminders - The reminders to delete
+   * @param {string} [source] - Declared producer source; must match each reminder's own source
+   * @returns {Promise<number>} How many reminders were deleted
+   */
+  static async deleteReminders(reminders, source) {
+    const byUser = new Map();
+    for (const reminder of reminders) {
+      if (this.#sourceBlocked(reminder, source)) continue;
+      if (!byUser.has(reminder.userId)) byUser.set(reminder.userId, {});
+      byUser.get(reminder.userId)[reminder.id] = _del;
+    }
+
+    let deleted = 0;
+    for (const [userId, updates] of byUser) {
+      const user = game.users.get(userId);
+      if (!user) {
+        ATLAS.log(1, `User ${userId} not found`);
+        continue;
+      }
+      if (game.user.id !== userId && !game.user.isGM) {
+        ui.notifications.error(`${DontForget.TITLE} | You don't have permission to delete this reminder`);
+        continue;
+      }
+      await user.setFlag(DontForget.ID, DontForget.FLAGS.REMINDERS, updates);
+      deleted += Object.keys(updates).length;
+    }
+
+    return deleted;
+  }
 }

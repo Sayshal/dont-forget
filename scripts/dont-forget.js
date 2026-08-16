@@ -567,8 +567,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     });
 
     if (confirmed) {
+      await ReminderManager.deleteReminders(completedReminders);
       for (const reminder of completedReminders) {
-        await ReminderManager.deleteReminder(reminder.id, reminder.userId);
         if (reminder.noteId) requestNote({ action: 'delete', noteId: reminder.noteId });
       }
       this.render();
