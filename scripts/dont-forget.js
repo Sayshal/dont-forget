@@ -13,7 +13,7 @@ export class DontForget {
   static FLAGS = { REMINDERS: 'reminders' };
   static TEMPLATES = { REMINDER_LIST: `modules/${this.ID}/templates/reminder-list.hbs`, CREATE_REMINDER_FORM: `modules/${this.ID}/templates/create-reminder.hbs` };
   static SETTINGS = { INJECT_BUTTON: 'inject-button' };
-  static HOOKS = { REMINDER_CREATED: 'dontForget.reminderCreated', REMINDER_COMPLETED: 'dontForget.reminderCompleted' };
+  static HOOKS = { REMINDER_CREATED: 'dontForget.reminderCreated', REMINDER_COMPLETED: 'dontForget.reminderCompleted', REMINDER_DELETED: 'dontForget.reminderDeleted' };
   static atlas;
   static #lastSeen = new Map();
 
@@ -46,13 +46,21 @@ export class DontForget {
    * @param {boolean} remote - Whether another client authored the change
    */
   static syncReminders(user, remote) {
+    const seeded = this.#lastSeen.has(user.id);
     const previous = this.#lastSeen.get(user.id) ?? {};
     const current = ReminderManager.getUserReminders(user.id);
     this.#lastSeen.set(user.id, foundry.utils.deepClone(current));
+
+    // A user first seen after startup has no baseline, so record one rather than reporting its whole list as new
+    if (!seeded) return;
+
     for (const reminder of Object.values(current)) {
       const before = previous[reminder.id];
       if (!before) Hooks.callAll(this.HOOKS.REMINDER_CREATED, reminder, { remote });
       else if (reminder.isDone && !before.isDone) Hooks.callAll(this.HOOKS.REMINDER_COMPLETED, reminder, { remote });
+    }
+    for (const reminder of Object.values(previous)) {
+      if (!current[reminder.id]) Hooks.callAll(this.HOOKS.REMINDER_DELETED, reminder, { remote });
     }
   }
 }

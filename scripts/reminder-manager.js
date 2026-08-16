@@ -8,6 +8,7 @@ import { DontForget } from './dont-forget.js';
  * @property {string} userId - User who created the reminder
  * @property {number} [createdAt] - Creation timestamp
  * @property {string} [source] - Module id that produced the reminder
+ * @property {string|null} [ref] - The producer's own key for whatever the reminder is about
  * @property {object|null} [dueDate] - In-world due date {year, month (1-indexed), day (1-indexed)}
  * @property {string|null} [noteId] - Journal entry page id of the backing Calendaria note
  * @property {boolean} [isDue] - Whether the backing note has delivered
@@ -67,6 +68,24 @@ export class ReminderManager {
   }
 
   /**
+   * Find reminders matching a producer, an entity, an owner, or a completion state
+   * @param {object} [query] - Query terms; omitted terms match anything
+   * @param {string} [query.source] - Module id that produced the reminder
+   * @param {string} [query.ref] - The producer's own key for the reminder's subject
+   * @param {string} [query.userId] - Owner, which also narrows the scan to that user
+   * @param {boolean} [query.isDone] - Completion state
+   * @returns {Reminder[]} Matching reminders
+   */
+  static findReminders({ source, ref, userId, isDone } = {}) {
+    const pool = userId ? this.getUserReminders(userId) : this.getAllReminders();
+
+    return Object.values(pool).filter(
+      (reminder) =>
+        (source === undefined || (reminder.source || DontForget.ID) === source) && (ref === undefined || (reminder.ref ?? null) === ref) && (isDone === undefined || !!reminder.isDone === isDone)
+    );
+  }
+
+  /**
    * Check whether a declared producer source may act on a reminder
    * @param {Reminder} reminder - The reminder being acted on
    * @param {string} [source] - Declared producer source
@@ -93,6 +112,11 @@ export class ReminderManager {
       return null;
     }
 
+    if (game.user.id !== userId && !game.user.isGM) {
+      ui.notifications.error(`${DontForget.TITLE} | You don't have permission to create reminders for another user`);
+      return null;
+    }
+
     const id = foundry.utils.randomID(16);
 
     const reminder = {
@@ -102,6 +126,7 @@ export class ReminderManager {
       userId,
       createdAt: Date.now(),
       source: reminderData.source || DontForget.ID,
+      ref: reminderData.ref ?? null,
       dueDate: reminderData.dueDate ?? null,
       noteId: reminderData.noteId ?? null,
       isDue: false
@@ -147,12 +172,8 @@ export class ReminderManager {
 
     if (this.#sourceBlocked(reminder, source)) return null;
 
-    // Create update data for just this reminder
-    const reminderUpdate = {
-      [reminderId]: { ...reminder, ...updateData }
-    };
-
-    return user.setFlag(DontForget.ID, DontForget.FLAGS.REMINDERS, reminderUpdate);
+    // Write only the changed keys; the flag update merges them into the stored record
+    return user.setFlag(DontForget.ID, DontForget.FLAGS.REMINDERS, { [reminderId]: updateData });
   }
 
   /**
