@@ -1,29 +1,33 @@
-<form id="{{#if editMode}}edit{{else}}create{{/if}}-reminder-form">
-  <div class="reminder-form-field">
-    <label for="reminder-text">{{labels.reminderText}}</label>
-    <textarea id="reminder-text" name="reminderText" {{#unless editMode}}placeholder="{{placeholderText}}" {{/unless}}
-      autofocus>{{#if editMode}}{{initialText}}{{/if}}</textarea>
+<div class="form-group stacked">
+  <label for="reminder-text">{{labels.reminderText}}</label>
+  <div class="form-fields">
+    <textarea id="reminder-text" name="reminderText" rows="3" {{#unless editMode}}placeholder="{{placeholderText}}"
+      {{/unless}} autofocus>{{initialText}}</textarea>
   </div>
-  {{#if showDueDate}}
-    <div class="reminder-form-field">
-      <label for="reminder-due-date">{{labels.dueDate}}</label>
-      <div class="due-date-control">
-        <input type="hidden" name="dueDate" value="{{initialDueDate}}">
-        <button type="button" id="reminder-due-date" class="due-date-pick">{{dueDateLabel}}</button>
-        <button type="button" class="due-date-clear" data-tooltip="{{labels.clearDueDate}}">
-          <i class="fas fa-times"></i>
-        </button>
-      </div>
+</div>
+
+{{#if showDueDate}}
+  <div class="form-group">
+    <label for="reminder-due-date">{{labels.dueDate}}</label>
+    <div class="form-fields due-date-control">
+      <input type="hidden" name="dueDate" value="{{initialDueDate}}">
+      <button type="button" id="reminder-due-date" class="due-date-pick">{{dueDateLabel}}</button>
+      <button type="button" class="due-date-clear icon" data-tooltip="{{labels.clearDueDate}}">
+        <i class="fas fa-times"></i>
+      </button>
     </div>
-  {{/if}}
-  {{#if isGM}}
-    <div class="reminder-form-field">
-      <label for="reminder-owner">{{labels.reminderOwner}}</label>
+  </div>
+{{/if}}
+
+{{#if isGM}}
+  <div class="form-group">
+    <label for="reminder-owner">{{labels.reminderOwner}}</label>
+    <div class="form-fields">
       <select id="reminder-owner" name="reminderOwner">
         {{#each users}}
           <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
         {{/each}}
       </select>
     </div>
-  {{/if}}
-</form>
+  </div>
+{{/if}}

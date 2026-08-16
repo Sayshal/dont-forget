@@ -10,36 +10,21 @@ const { renderTemplate } = foundry.applications.handlebars;
 export class DontForget {
   static ID = 'dont-forget';
   static TITLE = "Don't Forget!";
-
-  static FLAGS = {
-    REMINDERS: 'reminders'
-  };
-
-  static TEMPLATES = {
-    REMINDER_LIST: `modules/${this.ID}/templates/reminder-list.hbs`,
-    CREATE_REMINDER_FORM: `modules/${this.ID}/templates/create-reminder.hbs`
-  };
-
-  static SETTINGS = {
-    INJECT_BUTTON: 'inject-button'
-  };
-
-  static HOOKS = {
-    REMINDER_CREATED: 'dontForget.reminderCreated',
-    REMINDER_COMPLETED: 'dontForget.reminderCompleted'
-  };
-
-  /** @type {object} ATLAS registration handle, used to relay backing-note requests to the GM */
+  static FLAGS = { REMINDERS: 'reminders' };
+  static TEMPLATES = { REMINDER_LIST: `modules/${this.ID}/templates/reminder-list.hbs`, CREATE_REMINDER_FORM: `modules/${this.ID}/templates/create-reminder.hbs` };
+  static SETTINGS = { INJECT_BUTTON: 'inject-button' };
+  static HOOKS = { REMINDER_CREATED: 'dontForget.reminderCreated', REMINDER_COMPLETED: 'dontForget.reminderCompleted' };
   static atlas;
-
-  /** @type {Map<string, object>} Last-seen reminders per user, used to classify flag changes */
   static #lastSeen = new Map();
 
-  /**
-   * Initialize the module
-   */
+  /** Initialize the module */
   static initialize() {
-    this.atlas = ATLAS.register('dont-forget', { title: this.TITLE, github: 'Sayshal/dont-forget', events: [{ name: NOTE_SYNC, gmAuthoritative: true }] });
+    this.atlas = ATLAS.register('dont-forget', {
+      title: this.TITLE,
+      github: 'Sayshal/dont-forget',
+      events: [{ name: NOTE_SYNC, gmAuthoritative: true }],
+      theme: { scope: '.dont-forget' }
+    });
     ATLAS.log(3, 'Initializing module');
     registerSettings();
     registerDueDates();
@@ -64,7 +49,6 @@ export class DontForget {
     const previous = this.#lastSeen.get(user.id) ?? {};
     const current = ReminderManager.getUserReminders(user.id);
     this.#lastSeen.set(user.id, foundry.utils.deepClone(current));
-
     for (const reminder of Object.values(current)) {
       const before = previous[reminder.id];
       if (!before) Hooks.callAll(this.HOOKS.REMINDER_CREATED, reminder, { remote });
@@ -73,9 +57,6 @@ export class DontForget {
   }
 }
 
-/**
- * Hook initialization
- */
 Hooks.once('init', () => {
   DontForget.initialize();
 });
@@ -84,60 +65,37 @@ Hooks.once('ready', () => {
   DontForget.seedReminderCache();
 });
 
-/**
- * Fire reminder hooks and refresh the open app whenever reminder flags change on any client
- */
 Hooks.on('updateUser', (user, changes, _options, userId) => {
   if (!changes.flags?.[DontForget.ID]) return;
-
   DontForget.syncReminders(user, userId !== game.user.id);
-  if (DontForget.reminderApp?.rendered) DontForget.reminderApp.render();
+  const app = DontForget.reminderApp;
+  if (app?.rendered && !app.isTyping) app.render();
 });
 
-/**
- * Add reminder button to the player list
- */
 Hooks.on('renderPlayers', (_app, html, _data) => {
-  if (!game.settings.get(DontForget.ID, DontForget.SETTINGS.INJECT_BUTTON)) {
-    return;
-  }
-
-  // Remove any existing reminder buttons
+  if (!game.settings.get(DontForget.ID, DontForget.SETTINGS.INJECT_BUTTON)) return;
   const existingButtons = html.querySelectorAll(`.${DontForget.ID}-header-button`);
   existingButtons.forEach((button) => button.remove());
-
-  // If GM, add buttons for all players. If not GM, only add for self
   const playersToProcess = game.user.isGM ? html.querySelectorAll('.player') : html.querySelectorAll('.player.self');
-
   playersToProcess.forEach((playerElement) => {
     const userId = playerElement.dataset.userId;
     const playerNameSpan = playerElement.querySelector('.player-name');
-
     if (playerNameSpan && userId) {
-      // Create the reminder button element
       const reminderButton = document.createElement('i');
       reminderButton.className = `${DontForget.ID}-header-button fas fa-sticky-note`;
       reminderButton.setAttribute('data-tooltip', _loc('DONT-FORGET.button-title'));
       reminderButton.setAttribute('data-tooltip-direction', 'LEFT');
-      reminderButton.style.marginLeft = '8px';
-      reminderButton.style.cursor = 'pointer';
-
-      // Add left-click handler (open main window for this specific user)
       reminderButton.addEventListener('click', (event) => {
         event.preventDefault();
         event.stopPropagation();
         DontForget.reminderApp.setViewingUser(userId);
         DontForget.reminderApp.render(true);
       });
-
-      // Add right-click handler (immediately open Add Reminder dialog for this user)
       reminderButton.addEventListener('contextmenu', async (event) => {
         event.preventDefault();
         event.stopPropagation();
         await ReminderApp.createReminderForUser(event, event.target, userId);
       });
-
-      // Insert after the player name span
       playerNameSpan.insertAdjacentElement('afterend', reminderButton);
     }
   });
@@ -152,8 +110,14 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   /** @inheritdoc */
   constructor(options = {}) {
     super(options);
-    this.viewingUserId = game?.user?.id; // Default to current user
+    this.viewingUserId = game?.user?.isGM ? null : game?.user?.id;
   }
+
+  /** @type {string} Text filter applied to the list without re-rendering */
+  filter = '';
+
+  /** @type {boolean} Whether completed reminders are hidden */
+  hideCompleted = false;
 
   static DEFAULT_OPTIONS = {
     id: `${DontForget.ID}-app`,
@@ -162,37 +126,47 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       create: ReminderApp.createReminder,
       delete: ReminderApp.deleteReminder,
       edit: ReminderApp.editReminder,
+      'inline-edit': ReminderApp.inlineEdit,
+      'toggle-completed': ReminderApp.toggleCompleted,
       'delete-completed': ReminderApp.deleteCompletedReminders
     },
-    position: {
-      height: 'auto',
-      width: 600
-    },
-    window: {
-      icon: 'fas fa-sticky-note',
-      resizable: true
-    },
+    position: { height: 'auto', width: 460 },
+    window: { icon: 'fas fa-sticky-note', resizable: true },
     classes: [DontForget.ID]
   };
 
   /**
    * Set which user's reminders to view
-   * @param {string} userId - The user ID whose reminders to view
+   * @param {string|null} userId - The user ID whose reminders to view, or null for every user
    */
   setViewingUser(userId) {
     this.viewingUserId = userId;
   }
 
+  /**
+   * Whether the user is mid-keystroke, in which case a remote change must not re-render under them
+   * @returns {boolean} True while a text field inside the window holds focus
+   */
+  get isTyping() {
+    const active = document.activeElement;
+    if (!active || !this.element?.contains(active)) return false;
+    return active.matches('input:not([type="checkbox"]), textarea');
+  }
+
   /** @inheritdoc */
   get title() {
-    const viewingUser = game.users.get(this.viewingUserId);
-    const viewingUserName = viewingUser ? viewingUser.name : 'Unknown User';
+    if (!this.viewingUserId) return `${DontForget.TITLE} - ${_loc('DONT-FORGET.all-users')}`;
+    return `${DontForget.TITLE} - ${game.users.get(this.viewingUserId)?.name ?? ''}`;
+  }
 
-    if (game.user.isGM) {
-      return `${DontForget.TITLE} - ${viewingUserName}${this.viewingUserId === game.user.id ? ' (You)' : ''}`;
-    } else {
-      return `${DontForget.TITLE} - ${game.user.name}`;
-    }
+  /**
+   * The reminders visible in the current view
+   * @returns {Object<string, object>} Dictionary of reminders
+   */
+  #visibleReminders() {
+    if (this.viewingUserId) return ReminderManager.getUserReminders(this.viewingUserId);
+    if (game.user.isGM) return ReminderManager.getAllReminders();
+    return ReminderManager.getUserReminders(game.user.id);
   }
 
   /**
@@ -211,43 +185,58 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   _onRender(context, options) {
     super._onRender(context, options);
-
-    // Add click handlers for checkboxes
     this.element.querySelectorAll('.reminder-checkbox').forEach((checkbox) => {
-      checkbox.addEventListener('change', this._onCheckboxChange.bind(this));
+      checkbox.addEventListener('change', this.#onCheckboxChange.bind(this));
+    });
+    this.element.querySelector('input[name="filter"]')?.addEventListener('input', this.#onFilter.bind(this));
+    this.element.querySelector('input[name="quickAdd"]')?.addEventListener('keydown', this.#onQuickAdd.bind(this));
+    this.element.querySelector('select[name="viewUser"]')?.addEventListener('change', (event) => {
+      this.setViewingUser(event.target.value || null);
+      this.render();
+    });
+    this.#applyFilter();
+  }
+
+  /**
+   * Toggle a reminder's completion state
+   * @param {Event} event - The checkbox change event
+   */
+  async #onCheckboxChange(event) {
+    const reminderId = event.target.closest('[data-reminder-id]')?.dataset.reminderId;
+    if (reminderId) await ReminderManager.updateReminder(reminderId, { isDone: event.target.checked });
+  }
+
+  /**
+   * Store the filter term and apply it to the rendered rows
+   * @param {Event} event - The search input event
+   */
+  #onFilter(event) {
+    this.filter = event.target.value;
+    this.#applyFilter();
+  }
+
+  /**
+   * Hide rows that do not match the current filter term. Runs on the DOM so typing never re-renders
+   */
+  #applyFilter() {
+    const term = this.filter.trim().toLowerCase();
+    this.element.querySelectorAll('.reminder').forEach((row) => {
+      row.hidden = !!term && !row.textContent.toLowerCase().includes(term);
     });
   }
 
   /**
-   * Handle checkbox changes immediately
-   * @param {Event} event - Event triggering the checkbox change
+   * Create a reminder from the quick-add field
+   * @param {KeyboardEvent} event - The keydown event
    */
-  async _onCheckboxChange(event) {
-    const checkbox = event.target;
-    const reminderRow = checkbox.closest('[data-reminder-id]');
-    if (!reminderRow) return;
-
-    const reminderId = reminderRow.dataset.reminderId;
-    const isDone = checkbox.checked;
-
-    await ReminderManager.updateReminder(reminderId, { isDone });
-
-    // Update the row's CSS class immediately
-    if (isDone) {
-      reminderRow.classList.add('completed');
-    } else {
-      reminderRow.classList.remove('completed');
-    }
-
-    // Update the text span as well
-    const reminderText = reminderRow.querySelector('.reminder-text');
-    if (reminderText) {
-      if (isDone) {
-        reminderText.classList.add('completed');
-      } else {
-        reminderText.classList.remove('completed');
-      }
-    }
+  async #onQuickAdd(event) {
+    if (event.key !== 'Enter') return;
+    event.preventDefault();
+    const label = event.target.value.trim();
+    if (!label) return;
+    event.target.value = '';
+    await ReminderManager.createReminder(this.viewingUserId || game.user.id, { label });
+    this.render();
   }
 
   /**
@@ -255,50 +244,80 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    * @returns {object} Application context
    */
   _prepareContext() {
-    const rawReminders = ReminderManager.getReminders(this.viewingUserId);
-
-    // Process and enhance reminder data
-    const processedReminders = Object.values(rawReminders).map((reminder) => {
+    const processedReminders = Object.values(this.#visibleReminders()).map((reminder) => {
       const user = game.users.get(reminder.userId);
-
       return {
         ...reminder,
         creatorName: user ? user.name : '',
         createdTime: reminder.createdAt ? foundry.utils.timeSince(reminder.createdAt) : '',
-        completed: reminder.isDone,
         dueText: formatDueDate(reminder.dueDate),
         isDue: reminder.isDue && !reminder.isDone
       };
     });
 
-    // Sort reminders: completed at bottom, then by user, then by creation time
     const sortedReminders = processedReminders.sort((a, b) => {
-      // First sort by completion status
-      if (a.isDone !== b.isDone) {
-        return a.isDone ? 1 : -1;
-      }
-
-      // If completion status is the same, sort by user (for GM view)
-      if (game.user.isGM && a.userId !== b.userId) {
-        return a.creatorName.localeCompare(b.creatorName);
-      }
-
-      // Then by creation time (newest first)
-      if (a.createdAt && b.createdAt) {
-        return b.createdAt - a.createdAt;
-      }
-
-      // Default to sorting by ID to ensure stable order
+      if (a.isDone !== b.isDone) return a.isDone ? 1 : -1;
+      if (game.user.isGM && a.userId !== b.userId) return a.creatorName.localeCompare(b.creatorName);
+      if (a.createdAt && b.createdAt) return b.createdAt - a.createdAt;
       return a.id.localeCompare(b.id);
     });
-
     return {
       reminders: sortedReminders,
       isGM: game.user.isGM,
-      showGMColumns: game.user.isGM,
+      showCreator: game.user.isGM && !this.viewingUserId,
       showDueDate: isCalendariaActive(),
-      hasReminders: sortedReminders.length > 0
+      hasReminders: sortedReminders.length > 0,
+      hideCompleted: this.hideCompleted,
+      filter: this.filter,
+      viewingUserId: this.viewingUserId ?? '',
+      users: game.user.isGM ? game.users.contents.map((user) => ({ id: user.id, name: user.name, selected: user.id === this.viewingUserId })) : []
     };
+  }
+
+  /**
+   * Toggle whether completed reminders are listed
+   */
+  static toggleCompleted() {
+    const app = DontForget.reminderApp;
+    app.hideCompleted = !app.hideCompleted;
+    app.render();
+  }
+
+  /**
+   * Swap a reminder's label for an input, committing on Enter or blur and cancelling on Escape
+   * @param {Event} _event - Event triggering the inline edit
+   * @param {HTMLElement} target - The clicked label
+   */
+  static inlineEdit(_event, target) {
+    const app = DontForget.reminderApp;
+    const reminderId = target.closest('[data-reminder-id]')?.dataset.reminderId;
+    if (!reminderId) return;
+
+    const original = target.textContent.trim();
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'reminder-label-input';
+    input.value = original;
+
+    let closed = false;
+    const commit = async (save) => {
+      if (closed) return;
+      closed = true;
+
+      const label = input.value.trim();
+      if (save && label && label !== original) await ReminderManager.updateReminder(reminderId, { label });
+      app.render();
+    };
+
+    input.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter') commit(true);
+      else if (event.key === 'Escape') commit(false);
+    });
+    input.addEventListener('blur', () => commit(true));
+
+    target.replaceWith(input);
+    input.focus();
+    input.select();
   }
 
   /**
@@ -308,8 +327,11 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   static async createReminder(event, target) {
     const app = DontForget.reminderApp;
-    const targetUserId = app.viewingUserId;
-    await ReminderApp.createReminderForUser(event, target, targetUserId);
+    const quickAdd = app.element.querySelector('input[name="quickAdd"]');
+    const initialText = quickAdd?.value.trim() ?? '';
+    if (quickAdd) quickAdd.value = '';
+
+    await ReminderApp.createReminderForUser(event, target, app.viewingUserId || game.user.id, initialText);
   }
 
   /**
@@ -317,14 +339,14 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    * @param {Event} _event - Event triggering the reminder creation dialog
    * @param {HTMLElement} _target - The clicked button
    * @param {string} targetUserId - The user the reminder is created for
+   * @param {string} [initialText] - Text to seed the reminder field with
    */
-  static async createReminderForUser(_event, _target, targetUserId) {
+  static async createReminderForUser(_event, _target, targetUserId, initialText = '') {
     const placeholderText = _loc('DONT-FORGET.reminder-placeholder');
     const targetUser = game.users.get(targetUserId);
-
-    // Prepare template data
     const templateData = {
       isGM: game.user.isGM,
+      initialText,
       placeholderText: placeholderText,
       showDueDate: isCalendariaActive(),
       dueDateLabel: _loc('DONT-FORGET.due-date.pick'),
@@ -337,18 +359,8 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       users: []
     };
 
-    // Add user options for GMs
-    if (game.user.isGM) {
-      templateData.users = game.users.contents.map((user) => ({
-        id: user.id,
-        name: user.name,
-        selected: user.id === targetUserId
-      }));
-    }
-
-    // Render the form template
+    if (game.user.isGM) templateData.users = game.users.contents.map((user) => ({ id: user.id, name: user.name, selected: user.id === targetUserId }));
     const content = await renderTemplate(DontForget.TEMPLATES.CREATE_REMINDER_FORM, templateData);
-
     const result = await DialogV2.prompt({
       window: {
         title: `${_loc('DONT-FORGET.create-reminder-title')}${targetUser ? ` for ${targetUser.name}` : ''}`,
@@ -360,7 +372,6 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
         callback: (_event, button, _dialog) => {
           const reminderText = button.form.elements.reminderText.value.trim();
           const reminderOwner = button.form.elements.reminderOwner?.value;
-
           return {
             reminderText: reminderText || placeholderText,
             reminderOwner: reminderOwner,
@@ -384,11 +395,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       const reminder = await ReminderManager.createReminder(ownerId, reminderData);
       if (reminder?.dueDate) requestNote({ action: 'create', reminderId: reminder.id, userId: ownerId, label: reminder.label, dueDate: reminder.dueDate });
       ui.notifications.info('DONT-FORGET.reminder-created');
-
-      // Get the app instance and render it
-      if (DontForget.reminderApp && DontForget.reminderApp.rendered) {
-        DontForget.reminderApp.render();
-      }
+      if (DontForget.reminderApp && DontForget.reminderApp.rendered) DontForget.reminderApp.render();
     }
   }
 
@@ -413,9 +420,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     const confirmed = await DialogV2.confirm({
-      window: {
-        title: _loc('DONT-FORGET.confirms.deleteConfirm.Title')
-      },
+      window: { title: 'DONT-FORGET.confirms.deleteConfirm.Title' },
       content: _loc('DONT-FORGET.confirms.deleteConfirm.Content'),
       modal: true
     });
@@ -540,8 +545,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
    */
   static async deleteCompletedReminders() {
     const app = DontForget.reminderApp;
-    const reminders = ReminderManager.getReminders(app.viewingUserId);
-    const completedReminders = Object.values(reminders).filter((r) => r.isDone);
+    const completedReminders = Object.values(app.#visibleReminders()).filter((r) => r.isDone);
 
     if (completedReminders.length === 0) {
       ui.notifications.info('DONT-FORGET.no-completed-reminders');
@@ -549,9 +553,7 @@ class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     }
 
     const confirmed = await DialogV2.confirm({
-      window: {
-        title: _loc('DONT-FORGET.confirms.deleteCompletedConfirm.Title')
-      },
+      window: { title: 'DONT-FORGET.confirms.deleteCompletedConfirm.Title' },
       content: _loc('DONT-FORGET.confirms.deleteCompletedConfirm.Content'),
       modal: true
     });

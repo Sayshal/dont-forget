@@ -18,6 +18,9 @@
   "esmodules": [
     "scripts/dont-forget.js"
   ],
+  "styles": [
+    "styles/dont-forget.css"
+  ],
   "flags": {
     "hotReload": {
       "extensions": [

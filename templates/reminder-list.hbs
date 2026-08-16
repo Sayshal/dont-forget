@@ -1,89 +1,78 @@
-<div class="reminder-container">
-  {{#if hasReminders}}
-    <div class="reminder-table-container">
-      <table class="reminder-table">
-        <thead>
-          <tr>
-            <th class="col-status" data-tooltip="{{localize 'DONT-FORGET.table-headers.status-tooltip'}}">
-              {{localize 'DONT-FORGET.table-headers.status'}}
-            </th>
-            <th class="col-reminder" data-tooltip="{{localize 'DONT-FORGET.table-headers.reminder-tooltip'}}">
-              {{localize 'DONT-FORGET.table-headers.reminder'}}
-            </th>
-            {{#if isGM}}
-              <th class="col-creator" data-tooltip="{{localize 'DONT-FORGET.table-headers.creator-tooltip'}}">
-                {{localize 'DONT-FORGET.table-headers.creator'}}
-              </th>
-            {{/if}}
-            {{#if showDueDate}}
-              <th class="col-due" data-tooltip="{{localize 'DONT-FORGET.table-headers.due-tooltip'}}">
-                {{localize 'DONT-FORGET.table-headers.due'}}
-              </th>
-            {{/if}}
-            <th class="col-created" data-tooltip="{{localize 'DONT-FORGET.table-headers.created-tooltip'}}">
-              {{localize 'DONT-FORGET.table-headers.created'}}
-            </th>
-            <th class="col-actions" data-tooltip="{{localize 'DONT-FORGET.table-headers.actions-tooltip'}}">
-              {{localize 'DONT-FORGET.table-headers.actions'}}
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {{#each reminders}}
-            <tr class="reminder-row {{#if isDone}}completed{{/if}}" data-reminder-id="{{id}}">
-              <td class="col-status">
-                <input type="checkbox" class="reminder-checkbox" {{#if isDone}}checked{{/if}}
-                  data-tooltip="{{localize 'DONT-FORGET.mark-done'}}">
-              </td>
-              <td class="col-reminder">
-                <span class="reminder-text {{#if isDone}}completed{{/if}}">{{label}}</span>
-              </td>
-              {{#if ../isGM}}
-                <td class="col-creator">
-                  <span class="creator-name">{{creatorName}}</span>
-                </td>
-              {{/if}}
-              {{#if ../showDueDate}}
-                <td class="col-due">
-                  <span class="due-date {{#if isDue}}due{{/if}}"
-                    {{#if isDue}}data-tooltip="{{localize 'DONT-FORGET.due-date.arrived'}}" {{/if}}>{{dueText}}</span>
-                </td>
-              {{/if}}
-              <td class="col-created">
-                <span class="created-time">{{createdTime}}</span>
-              </td>
-              <td class="col-actions">
-                <div class="reminder-actions">
-                  <button type="button" data-action="edit" class="reminder-edit"
-                    data-tooltip="{{localize 'DONT-FORGET.edit-reminder'}}">
-                    <i class="fas fa-edit"></i>
-                  </button>
-                  <button type="button" data-action="delete" class="reminder-delete"
-                    data-tooltip="{{localize 'DONT-FORGET.delete-reminder'}}">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-          {{/each}}
-        </tbody>
-      </table>
-    </div>
-  {{else}}
-    <div class="reminder-empty">
-      <p>{{localize 'DONT-FORGET.no-reminders'}}</p>
-    </div>
-  {{/if}}
+<div class="reminder-container {{#if hideCompleted}}hide-completed{{/if}}">
+  <div class="reminder-toolbar">
+    <search class="reminder-search">
+      <input type="search" name="filter" value="{{filter}}" placeholder="{{localize 'DONT-FORGET.filter-placeholder'}}"
+        autocomplete="off">
+    </search>
 
-  <div class="reminder-footer">
-    <button type="button" data-action="delete-completed" class="reminder-delete-completed"
-      data-tooltip="{{localize 'DONT-FORGET.delete-completed-tooltip'}}">
-      <i class="fas fa-trash"></i> {{localize 'DONT-FORGET.delete-completed'}}
+    {{#if isGM}}
+      <select name="viewUser" data-tooltip="{{localize 'DONT-FORGET.view-user'}}">
+        <option value="" {{#unless viewingUserId}}selected{{/unless}}>{{localize 'DONT-FORGET.all-users'}}</option>
+        {{#each users}}
+          <option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>
+        {{/each}}
+      </select>
+    {{/if}}
+
+    <button type="button" class="reminder-toggle-completed icon" data-action="toggle-completed"
+      aria-pressed="{{#if hideCompleted}}true{{else}}false{{/if}}"
+      data-tooltip="{{#if hideCompleted}}{{localize 'DONT-FORGET.show-completed'}}{{else}}{{localize 'DONT-FORGET.hide-completed'}}{{/if}}">
+      <i class="fas {{#if hideCompleted}}fa-eye-slash{{else}}fa-eye{{/if}}"></i>
     </button>
 
-    <button type="button" data-action="create" class="reminder-create"
-      data-tooltip="{{localize 'DONT-FORGET.add-reminder-tooltip'}}">
-      <i class="fas fa-plus"></i> {{localize 'DONT-FORGET.add-reminder'}}
+    <button type="button" class="reminder-delete-completed icon" data-action="delete-completed"
+      data-tooltip="{{localize 'DONT-FORGET.delete-completed-tooltip'}}">
+      <i class="fas fa-broom"></i>
+    </button>
+  </div>
+
+  {{#if hasReminders}}
+    <ol class="reminder-list">
+      {{#each reminders}}
+        <li class="reminder{{#if isDone}} is-done{{/if}}{{#if isDue}} is-due{{/if}}" data-reminder-id="{{id}}">
+          <input type="checkbox" class="reminder-checkbox" {{#if isDone}}checked{{/if}}
+            data-tooltip="{{localize 'DONT-FORGET.mark-done'}}">
+
+          <div class="reminder-body">
+            <span class="reminder-label" data-action="inline-edit"
+              data-tooltip="{{localize 'DONT-FORGET.edit-inline'}}">{{label}}</span>
+
+            <div class="reminder-meta">
+              {{#if dueText}}
+                <span class="reminder-due"
+                  data-tooltip="{{#if isDue}}{{localize 'DONT-FORGET.due-date.arrived'}}{{else}}{{localize 'DONT-FORGET.table-headers.due-tooltip'}}{{/if}}">
+                  <i class="fas fa-calendar-day"></i>{{dueText}}
+                </span>
+              {{/if}}
+              {{#if ../showCreator}}
+                <span class="reminder-creator">{{creatorName}}</span>
+              {{/if}}
+              <span class="reminder-created">{{createdTime}}</span>
+            </div>
+          </div>
+
+          <div class="reminder-controls">
+            <button type="button" class="icon" data-action="edit"
+              data-tooltip="{{localize 'DONT-FORGET.edit-reminder'}}">
+              <i class="fas fa-pen"></i>
+            </button>
+            <button type="button" class="icon" data-action="delete"
+              data-tooltip="{{localize 'DONT-FORGET.delete-reminder'}}">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+        </li>
+      {{/each}}
+    </ol>
+  {{else}}
+    <p class="reminder-empty">{{localize 'DONT-FORGET.no-reminders'}}</p>
+  {{/if}}
+
+  <div class="reminder-add">
+    <input type="text" name="quickAdd" placeholder="{{localize 'DONT-FORGET.quick-add-placeholder'}}"
+      autocomplete="off">
+    <button type="button" class="icon" data-action="create" data-tooltip="{{localize 'DONT-FORGET.more-options'}}">
+      <i class="fas fa-sliders"></i>
     </button>
   </div>
 </div>
