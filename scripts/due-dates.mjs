@@ -61,7 +61,7 @@ function reminderForNote(noteId) {
  * @returns {Promise<void>}
  */
 async function syncNote(request) {
-  if (!game.users.activeGM?.isSelf) return;
+  if (!ATLAS.isPrimaryGM) return;
   if (request.action === 'delete') {
     await CALENDARIA.api.deleteNote(request.noteId);
     return;
@@ -90,11 +90,11 @@ async function syncNote(request) {
  */
 export function requestNote(request) {
   if (!dueDatesEnabled()) return;
-  if (game.users.activeGM?.isSelf) {
+  if (ATLAS.isPrimaryGM) {
     syncNote(request);
     return;
   }
-  if (!game.users.activeGM) {
+  if (!ATLAS.primaryGM) {
     ui.notifications.warn('DONTFORGET.Due.NoGM', { localize: true });
     return;
   }
@@ -107,7 +107,7 @@ export function requestNote(request) {
  * @returns {void}
  */
 function onEventTriggered(event) {
-  if (!event?.isReminder || !game.users.activeGM?.isSelf) return;
+  if (!event?.isReminder || !ATLAS.isPrimaryGM) return;
   const reminder = reminderForNote(event.id);
   if (reminder && !reminder.isDue) ReminderManager.updateReminder(reminder.id, { isDue: true });
 }
@@ -118,7 +118,7 @@ function onEventTriggered(event) {
  * @returns {void}
  */
 function onNoteDeleted(noteId) {
-  if (!game.users.activeGM?.isSelf) return;
+  if (!ATLAS.isPrimaryGM) return;
   const reminder = reminderForNote(noteId);
   if (reminder) ReminderManager.updateReminder(reminder.id, { dueDate: null, noteId: null, isDue: false });
 }
