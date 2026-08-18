@@ -301,11 +301,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return;
     }
 
-    const confirmed = await DialogV2.confirm({
-      window: { title: 'DONTFORGET.Confirm.DeleteTitle' },
-      content: _loc('DONTFORGET.Confirm.Delete'),
-      modal: true
-    });
+    const confirmed = await DialogV2.confirm({ classes: ['dont-forget'], window: { title: 'DONTFORGET.Confirm.DeleteTitle' }, content: _loc('DONTFORGET.Confirm.Delete'), modal: true });
     if (!confirmed) return;
 
     await ReminderManager.deleteReminder(reminderId, reminder.userId);
@@ -386,11 +382,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return;
     }
 
-    const confirmed = await DialogV2.confirm({
-      window: { title: 'DONTFORGET.Confirm.DeleteAllTitle' },
-      content: _loc('DONTFORGET.Confirm.DeleteAll'),
-      modal: true
-    });
+    const confirmed = await DialogV2.confirm({ classes: ['dont-forget'], window: { title: 'DONTFORGET.Confirm.DeleteAllTitle' }, content: _loc('DONTFORGET.Confirm.DeleteAll'), modal: true });
     if (!confirmed) return;
 
     await ReminderManager.deleteReminders(completed);
