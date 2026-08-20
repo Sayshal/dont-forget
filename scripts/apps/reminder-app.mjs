@@ -274,7 +274,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const entry = await promptReminder({
       title: targetUser ? _loc('DONTFORGET.Dialog.CreateFor', { name: targetUser.name }) : _loc('DONTFORGET.Dialog.CreateTitle'),
       icon: 'fas fa-plus',
-      submitLabel: _loc('DONTFORGET.Dialog.Create'),
+      submitLabel: _loc('ATLAS.Common.Create'),
       dialogClass: 'create-reminder-dialog',
       context: formContext({ initialText, ownerId: targetUserId })
     });
@@ -326,7 +326,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const entry = await promptReminder({
       title: _loc('DONTFORGET.Dialog.EditTitle'),
       icon: 'fas fa-edit',
-      submitLabel: _loc('DONTFORGET.Dialog.Save'),
+      submitLabel: _loc('ATLAS.Common.Save'),
       dialogClass: 'edit-reminder-dialog',
       context: formContext({ editMode: true, initialText: reminder.label, dueDate: reminder.dueDate, ownerId: reminder.userId })
     });
