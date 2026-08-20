@@ -27,7 +27,7 @@
       {{#each reminders}}
         <li class="reminder{{#if isDone}} is-done{{/if}}{{#if isDue}} is-due{{/if}}" data-reminder-id="{{id}}">
           <input type="checkbox" class="reminder-checkbox" {{#if isDone}}checked{{/if}}
-            data-tooltip="DONTFORGET.Reminder.MarkDone">
+            data-tooltip="{{#if isDone}}DONTFORGET.Reminder.MarkNotDone{{else}}DONTFORGET.Reminder.MarkDone{{/if}}">
           <div class="reminder-body">
             <span class="reminder-label" data-action="inline-edit"
               data-tooltip="ATLAS.Common.ClickToRename">{{label}}</span>

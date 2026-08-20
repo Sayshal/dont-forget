@@ -284,7 +284,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const reminder = await ReminderManager.createReminder(ownerId, { label: entry.label, dueDate: entry.dueDate });
     if (reminder?.dueDate) requestNote({ action: 'create', reminderId: reminder.id, userId: ownerId, label: reminder.label, dueDate: reminder.dueDate });
 
-    ui.notifications.info('DONTFORGET.Reminder.Created');
+    if (reminder) ui.notifications.info('DONTFORGET.Reminder.Created');
   }
 
   /**
