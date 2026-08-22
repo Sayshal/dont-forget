@@ -326,7 +326,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const entry = await promptReminder({
       title: _loc('DONTFORGET.Dialog.EditTitle'),
       icon: 'fas fa-edit',
-      submitLabel: _loc('ATLAS.Common.Save'),
+      submitLabel: _loc('ATLAS.Common.Apply'),
       dialogClass: 'edit-reminder-dialog',
       context: formContext({ editMode: true, initialText: reminder.label, dueDate: reminder.dueDate, ownerId: reminder.userId })
     });

@@ -50,7 +50,7 @@ function reminderForNote(noteId) {
 }
 
 /**
- * Create, move, or remove the calendar note backing a reminder. Runs on the active GM only
+ * Create, move, or remove the calendar note backing a reminder. Runs on the ATLAS primary GM only
  * @param {object} request - The note request
  * @param {string} request.action - 'create', 'update' or 'delete'
  * @param {string} [request.reminderId] - Reminder the created note is linked back to
@@ -84,7 +84,7 @@ async function syncNote(request) {
 }
 
 /**
- * Run a backing-note operation on the active GM, so players without note permission still get one
+ * Run a backing-note operation on the ATLAS primary GM, so players without note permission still get one
  * @param {object} request - The note request, as accepted by syncNote
  * @returns {void}
  */
