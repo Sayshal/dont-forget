@@ -1,212 +1,261 @@
-/* stylelint-disable declaration-property-value-keyword-no-deprecated */
-
-/* Don't Forget Module Styles */
 .dont-forget {
-  /* Dialog styles - proper block layout */
   &.create-reminder-dialog,
   &.edit-reminder-dialog {
     .dialog-content {
-      padding: 1rem;
-      min-width: 20rem;
-    }
+      min-width: 22rem;
 
-    .reminder-form-field {
-      display: block;
-      margin-bottom: 1rem;
-      width: 100%;
+      .reminder-form {
+        gap: var(--spacer-16);
+        display: flex;
+        flex-direction: column;
+      }
 
-      &:last-child {
-        margin-bottom: 0;
+      textarea {
+        resize: vertical;
+      }
+
+      .due-date-control {
+        gap: 0.25rem;
+
+        .due-date-pick {
+          flex: 1;
+        }
+
+        .due-date-clear {
+          flex: none;
+        }
       }
     }
-
-    label {
-      display: block;
-      width: 100%;
-      margin-bottom: 0.5rem;
-      font-weight: bold;
-      font-size: 0.9rem;
-      line-height: 1.2;
-    }
-
-    input[type='text'],
-    textarea,
-    select {
-      display: block;
-      width: 100%;
-      font-family: inherit;
-      box-sizing: border-box;
-      margin: 0;
-    }
-
-    textarea {
-      min-height: 6.25rem;
-      resize: vertical;
-    }
   }
 
-  /* Main application window - ensure full height usage */
-  &:not(.create-reminder-dialog, .edit-reminder-dialog) {
-    .window-content {
-      padding: 0;
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-    }
-  }
-
-  /* Table container - full width and height */
-  .reminder-container {
+  .window-content {
+    gap: 0.5rem;
     display: flex;
     flex-direction: column;
-    height: 100%;
-    padding: 1rem;
-    width: 100%;
-    box-sizing: border-box;
+    padding: 0.5rem;
+    color: var(--atlas-text);
+    background: var(--atlas-bg);
 
-    .reminder-table-container {
+    input:not([type='checkbox']),
+    textarea,
+    select {
+      border: 0.0625rem solid var(--atlas-border);
+      color: var(--atlas-text);
+      background: var(--atlas-input-bg);
+
+      &::placeholder {
+        color: var(--atlas-text-dim);
+      }
+
+      &:focus {
+        border-color: var(--atlas-primary);
+        outline: none;
+        box-shadow: none;
+      }
+    }
+
+    select option {
+      color: var(--atlas-text);
+      background: var(--atlas-bg);
+    }
+
+    input[type='checkbox'] {
+      --checkbox-background-color: var(--atlas-input-bg);
+      --checkbox-border-color: var(--atlas-border);
+      --checkbox-checked-color: var(--atlas-primary);
+      --checkbox-checkmark-color: var(--atlas-text-on-color);
+    }
+
+    button {
+      border: 0.0625rem solid var(--atlas-button-border);
+      color: var(--atlas-button-text);
+      background: var(--atlas-button-bg);
+
+      &:hover {
+        color: var(--atlas-text-heading);
+        background: var(--atlas-button-hover);
+      }
+    }
+  }
+
+  .reminder-container {
+    gap: 0.5rem;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+
+    &.hide-completed .reminder.is-done {
+      display: none;
+    }
+  }
+
+  .reminder-toolbar {
+    gap: 0.25rem;
+    display: flex;
+    align-items: center;
+
+    .reminder-search {
       flex: 1;
-      overflow-y: auto;
-      margin-bottom: 1rem;
+      min-width: 0;
+
+      input {
+        width: 100%;
+      }
+    }
+
+    select {
+      flex: 0 1 9rem;
+    }
+  }
+
+  .reminder-list {
+    gap: 0.25rem;
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    overflow-y: auto;
+    list-style: none;
+  }
+
+  .reminder {
+    gap: 0.5rem;
+    display: flex;
+    align-items: flex-start;
+    padding: 0.375rem 0.5rem;
+    border: 0.0625rem solid var(--atlas-border);
+    border-radius: 0.25rem;
+    background: var(--atlas-bg-lighter);
+
+    &:hover {
+      border-color: var(--atlas-border-light);
+      background: var(--atlas-bg-hover);
+    }
+
+    .reminder-checkbox {
+      flex: none;
+      margin: 0.125rem 0 0;
+    }
+
+    .reminder-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .reminder-label {
+      overflow-wrap: anywhere;
+      display: block;
+      cursor: text;
+    }
+
+    .reminder-label-input {
       width: 100%;
+      height: auto;
     }
 
-    /* Reminder table - fill container */
-    .reminder-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.9rem;
-      table-layout: auto;
-      margin: 0;
-
-      th,
-      td {
-        padding: 0.75rem 0.5rem;
-        text-align: left;
-        vertical-align: middle;
-      }
-
-      th {
-        font-weight: bold;
-        position: sticky;
-        top: 0;
-        z-index: 1;
-        white-space: nowrap;
-      }
-
-      /* Column sizing - let them size naturally but with minimums */
-      .col-status {
-        width: 3.75rem;
-        text-align: center;
-      }
-
-      .col-reminder {
-        min-width: 12.5rem;
-        max-width: none;
-        word-wrap: break-word;
-
-        .reminder-text {
-          word-break: break-word;
-          hyphens: auto;
-        }
-      }
-
-      .col-creator {
-        min-width: 6.25rem;
-        white-space: nowrap;
-      }
-
-      .col-created {
-        min-width: 5rem;
-        white-space: nowrap;
-      }
-
-      .col-actions {
-        width: 5rem;
-        text-align: center;
-      }
-    }
-
-    /* Reminder rows - fix hover contrast */
-    .reminder-row {
-      transition: all 0.2s ease;
-
-      &.completed {
-        opacity: 0.7;
-
-        .reminder-text {
-          text-decoration: line-through;
-        }
-      }
-    }
-
-    /* Action buttons */
-    .reminder-actions {
+    .reminder-meta {
+      gap: 0.5rem;
       display: flex;
-      gap: 0.25rem;
-      justify-content: center;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 0.125rem;
+      color: var(--atlas-text-dim);
+      font-size: var(--font-size-11);
 
-      .reminder-edit,
-      .reminder-delete {
-        padding: 0.25rem;
+      i {
+        margin-right: 0.25rem;
+      }
+    }
+
+    .reminder-creator {
+      color: var(--atlas-text-secondary);
+    }
+
+    .reminder-controls {
+      gap: 0.125rem;
+      display: flex;
+      flex: none;
+
+      button {
+        width: 1.5rem;
+        height: 1.5rem;
+        padding: 0;
         border: none;
-        border-radius: 0.188rem;
-        cursor: pointer;
+        color: var(--atlas-text-dim);
+        font-size: var(--font-size-12);
         background: none;
-        transition: color 0.2s ease;
-        font-size: 0.9rem;
 
         &:hover {
+          color: var(--atlas-primary);
           box-shadow: none;
-          outline: none;
         }
       }
     }
 
-    /* Empty state */
-    .reminder-empty {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem 0;
-      font-style: italic;
-      text-align: center;
-    }
+    &.is-done {
+      opacity: 0.6;
 
-    /* Footer area */
-    .reminder-footer {
-      display: flex;
-      justify-content: center;
-      margin-top: auto;
-      gap: 0.5rem;
-
-      .reminder-create,
-      .reminder-delete-completed {
-        width: auto;
-        white-space: nowrap;
+      .reminder-label {
+        text-decoration: line-through;
       }
     }
+
+    &.is-due {
+      border-color: var(--atlas-warning);
+
+      .reminder-due {
+        color: var(--atlas-warning);
+        font-weight: bold;
+      }
+    }
+  }
+
+  .reminder-empty {
+    flex: 1;
+    margin: 0;
+    padding: 1.5rem 0;
+    color: var(--atlas-text-dim);
+    font-style: italic;
+    text-align: center;
+  }
+
+  .reminder-add {
+    gap: 0.25rem;
+    display: flex;
+    align-items: center;
+
+    input {
+      flex: 1;
+      min-width: 0;
+    }
+
+    button {
+      flex: none;
+      width: 2rem;
+    }
+  }
+
+  .reminder-toggle-completed,
+  .reminder-delete-completed {
+    flex: none;
+    width: 2rem;
+  }
+
+  button.reminder-delete-completed:hover {
+    color: var(--atlas-error);
   }
 }
 
-/* Make sure the h3 header is flexbox to support margin-left: auto */
-#players h3[aria-label='Players'] {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
+#players .player .dont-forget-header-button {
+  margin-left: 0.5rem;
+  color: var(--user-color);
+  cursor: pointer;
+  transition: text-shadow 0.2s ease;
 
-  /* Header button styling */
-  .dont-forget-header-button {
-    margin-left: auto;
-    color: var(--user-color);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-size: 1rem;
-
-    &:hover {
-      text-shadow: 0 0 0.25rem var(--color-shadow-highlight);
-      transform: scale(1.1);
-    }
+  &:hover {
+    text-shadow: 0 0 0.25rem var(--color-shadow-highlight);
   }
 }
