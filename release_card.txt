@@ -1,0 +1,11 @@
+## New Features
+
+- The reminder window is rebuilt as a compact row list on the ATLAS theme, with a toolbar for text filtering, hiding completed reminders and clearing them, plus a GM user picker.
+- Reminders can carry an in-world due date from Calendaria, backed by a hidden note that toasts the owner when the date arrives and flags the reminder as due in the list.
+- Labels can be renamed in place, and a quick-add field creates a reminder on Enter. The list sorts due-and-arrived reminders first, then by due date, with completed reminders last.
+- A public API lets other modules create, update, complete and delete reminders, with a findReminders query by source, ref, owner or completion state. Reminders record which module made them.
+- New dontForget.reminderCreated, reminderCompleted and reminderDeleted hooks fire on every client when a reminder changes, and the open reminder window refreshes live when reminders change on any client.
+
+## Bug Fixes
+
+- 8 bugs squashed
