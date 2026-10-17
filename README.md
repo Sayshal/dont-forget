@@ -20,15 +20,18 @@ Whether you need to remember a plot hook, track character goals, or note rules c
 
 ## Features
 
-- **Quick Access**: Convenient reminder button in the player list for instant access
-- **Smart Permissions**: Players see only their reminders; GMs see everything
-- **Completion Tracking**: Mark reminders as done with simple checkboxes
-- **Creator Visibility**: GMs can see who created each reminder for better session management
-- **Right-Click Creation**: Quick reminder creation with right-click on the reminder button
-- **Bulk Management**: Delete all completed reminders with one click
+**Completion Tracking:** Mark reminders as done with simple checkboxes. Players see only their reminders; GMs see everything, along with who created each one.
 
 <img src="https://wiki.3deathsaves.com/dont-forget/reminders-window.png" alt="Reminders window" width="400">
+
+**Right-Click Creation:** Quick reminder creation with right-click on the reminder button.
+
 <img src="https://wiki.3deathsaves.com/dont-forget/create-reminder-dialog.png" alt="New Reminder dialog" width="400">
+
+### Also Included
+
+- **Quick Access**: Convenient reminder button in the player list for instant access
+- **Bulk Management**: Delete all completed reminders with one click
 
 ---
 
