@@ -27,6 +27,9 @@ Whether you need to remember a plot hook, track character goals, or note rules c
 - **Right-Click Creation**: Quick reminder creation with right-click on the reminder button
 - **Bulk Management**: Delete all completed reminders with one click
 
+<img src="https://wiki.3deathsaves.com/dont-forget/reminders-window.png" alt="Reminders window" width="400">
+<img src="https://wiki.3deathsaves.com/dont-forget/create-reminder-dialog.png" alt="New Reminder dialog" width="400">
+
 ---
 
 ## Installation
