@@ -1,3 +1,4 @@
 ## Bug Fixes
 
-- The reminder button in the player list now uses its row's player color instead of the viewing user's color. Offline players show grey.
+- Deleting or clearing reminders while due dates are switched off now still removes their Calendaria notes.
+- Editing a reminder while due dates are switched off no longer erases its existing due date.
