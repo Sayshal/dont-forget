@@ -89,7 +89,8 @@ async function syncNote(request) {
  * @returns {void}
  */
 export function requestNote(request) {
-  if (!dueDatesEnabled()) return;
+  if (!isCalendariaActive()) return;
+  if (request.action !== 'delete' && !dueDatesEnabled()) return;
   if (ATLAS.isPrimaryGM) {
     syncNote(request);
     return;

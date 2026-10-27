@@ -331,6 +331,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       context: formContext({ editMode: true, initialText: reminder.label, dueDate: reminder.dueDate, ownerId: reminder.userId })
     });
     if (!entry) return;
+    if (!dueDatesEnabled()) entry.dueDate = reminder.dueDate ?? null;
 
     if (entry.ownerId && entry.ownerId !== reminder.userId) await ReminderApp.#transferReminder(reminder, entry);
     else await ReminderApp.#applyEdit(reminder, entry);
