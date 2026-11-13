@@ -126,6 +126,12 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   }
 
   /** @inheritdoc */
+  _configureRenderOptions(options) {
+    super._configureRenderOptions(options);
+    if (this.hasFrame) options.window = { ...options.window, title: this.title };
+  }
+
+  /** @inheritdoc */
   _prepareContext() {
     const rows = buildRows(this.visibleReminders);
     return {
@@ -284,7 +290,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const reminder = await ReminderManager.createReminder(ownerId, { label: entry.label, dueDate: entry.dueDate });
     if (reminder?.dueDate) requestNote({ action: 'create', reminderId: reminder.id, userId: ownerId, label: reminder.label, dueDate: reminder.dueDate });
 
-    if (reminder) ui.notifications.info('DONTFORGET.Reminder.Created');
+    if (reminder) ui.notifications.info('DONTFORGET.Reminder.Created', { localize: true });
   }
 
   /**
@@ -297,7 +303,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const reminderId = target.closest('[data-reminder-id]')?.dataset.reminderId;
     const reminder = reminderId ? this.visibleReminders[reminderId] : null;
     if (!reminder) {
-      ui.notifications.error('DONTFORGET.Reminder.NotFound');
+      ui.notifications.error('DONTFORGET.Reminder.NotFound', { localize: true });
       return;
     }
 
@@ -319,7 +325,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     const reminderId = target.closest('[data-reminder-id]')?.dataset.reminderId;
     const reminder = reminderId ? this.visibleReminders[reminderId] : null;
     if (!reminder) {
-      ui.notifications.error('DONTFORGET.Reminder.NotFound');
+      ui.notifications.error('DONTFORGET.Reminder.NotFound', { localize: true });
       return;
     }
 
@@ -336,7 +342,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     if (entry.ownerId && entry.ownerId !== reminder.userId) await ReminderApp.#transferReminder(reminder, entry);
     else await ReminderApp.#applyEdit(reminder, entry);
 
-    ui.notifications.info('DONTFORGET.Reminder.Updated');
+    ui.notifications.info('DONTFORGET.Reminder.Updated', { localize: true });
     this.render();
   }
 
@@ -379,7 +385,7 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
   static async deleteCompletedReminders() {
     const completed = Object.values(this.visibleReminders).filter((reminder) => reminder.isDone);
     if (!completed.length) {
-      ui.notifications.info('DONTFORGET.Confirm.NoCompleted');
+      ui.notifications.info('DONTFORGET.Confirm.NoCompleted', { localize: true });
       return;
     }
 

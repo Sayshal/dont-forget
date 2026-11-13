@@ -99,11 +99,11 @@ export class ReminderManager {
   static async createReminder(userId, reminderData = {}) {
     const user = game.users.get(userId);
     if (!user) {
-      ui.notifications.error('DONTFORGET.Api.UserNotFound');
+      ui.notifications.error('DONTFORGET.Api.UserNotFound', { localize: true });
       return null;
     }
     if (!this.#canWrite(userId)) {
-      ui.notifications.error('DONTFORGET.Api.NoCreatePermission');
+      ui.notifications.error('DONTFORGET.Api.NoCreatePermission', { localize: true });
       return null;
     }
 
@@ -143,7 +143,7 @@ export class ReminderManager {
       return null;
     }
     if (!this.#canWrite(reminder.userId)) {
-      ui.notifications.error('DONTFORGET.Api.NoUpdatePermission');
+      ui.notifications.error('DONTFORGET.Api.NoUpdatePermission', { localize: true });
       return null;
     }
     if (this.#sourceBlocked(reminder, source)) return null;
@@ -174,7 +174,7 @@ export class ReminderManager {
       return null;
     }
     if (!this.#canWrite(userId)) {
-      ui.notifications.error('DONTFORGET.Api.NoDeletePermission');
+      ui.notifications.error('DONTFORGET.Api.NoDeletePermission', { localize: true });
       return null;
     }
     const reminder = this.getUserReminders(userId)[reminderId];
@@ -203,7 +203,7 @@ export class ReminderManager {
         continue;
       }
       if (!this.#canWrite(userId)) {
-        ui.notifications.error('DONTFORGET.Api.NoDeletePermission');
+        ui.notifications.error('DONTFORGET.Api.NoDeletePermission', { localize: true });
         continue;
       }
       await user.setFlag(MODULE.ID, MODULE.FLAGS.REMINDERS, removals);
