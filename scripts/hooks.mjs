@@ -51,7 +51,7 @@ function addReminderButton(playerRow) {
     event.stopPropagation();
     const app = reminderApp() ?? new ReminderApp();
     app.setViewingUser(userId);
-    app.render(true);
+    app.render({ force: true });
   });
   button.addEventListener('contextmenu', async (event) => {
     event.preventDefault();
