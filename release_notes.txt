@@ -1,4 +1,8 @@
 ## Bug Fixes
 
-- Deleting or clearing reminders while due dates are switched off now still removes their Calendaria notes.
-- Editing a reminder while due dates are switched off no longer erases its existing due date.
+- Reminder notifications and API error messages now show the translated message instead of the raw localization key.
+- The reminder window title now updates when switching to a different player or the All Users view.
+
+## Changes
+
+- Tested in a dnd5e 6.1 world. The module does not depend on any game system.
