@@ -1,43 +1,47 @@
-# Don't Forget
+# Don't Forget!
+
+A to-do list that lives in Foundry's player list.
+
+Jot down plot hooks, character goals, or rules you keep meaning to look up, then tick them off as you play. Each player's list stays private, and the GM sees everyone's.
+
+![Don't Forget! Hero](https://wiki.3deathsaves.com/dont-forget/hero.png)
 
 ![GitHub release](https://img.shields.io/github/v/release/Sayshal/dont-forget?style=for-the-badge)
 ![GitHub Downloads (specific asset, all releases)](<https://img.shields.io/github/downloads/Sayshal/dont-forget/module.zip?style=for-the-badge&logo=foundryvirtualtabletop&logoColor=white&logoSize=auto&label=Downloads%20(Total)&color=ff144f>)
 ![GitHub Downloads (specific asset, latest release)](<https://img.shields.io/github/downloads/Sayshal/dont-forget/latest/module.zip?sort=date&style=for-the-badge&logo=foundryvirtualtabletop&logoColor=white&logoSize=auto&label=Downloads%20(Latest)&color=ff144f>)
 
 ![Foundry Version](https://img.shields.io/endpoint?url=https%3A%2F%2Ffoundryshields.com%2Fversion%3Fstyle%3Dfor-the-badge%26url%3Dhttps%3A%2F%2Fgithub.com%2FSayshal%2Fdont-forget%2Freleases%2Flatest%2Fdownload%2Fmodule.json)
-
-## Supporting The Module
-
 [![Discord](https://dcbadge.limes.pink/api/server/feMsefha8D)](https://discord.gg/feMsefha8D)
 
-## Introduction
-
-**Don't Forget!** is a simple yet powerful reminder system for Foundry VTT that helps players and GMs stay organized during their gaming sessions. Never lose track of important notes, character development ideas, or session reminders again!
-
-Whether you need to remember a plot hook, track character goals, or note rules clarifications, **Don't Forget!** keeps everything at your fingertips with an intuitive, integrated interface.
+**[Read the Wiki](https://wiki.3deathsaves.com/dont-forget/)** for guides, the settings reference, and the API.
 
 ---
 
-## Features
+## What You Get
 
-**Completion Tracking:** Mark reminders as done with simple checkboxes. Players see only their reminders; GMs see everything, along with who created each one.
+**One click away.** A sticky-note button sits beside each name in the player list. Click it to open the list. Right-click it to write a new reminder.
 
-<img src="https://wiki.3deathsaves.com/dont-forget/reminders-window.png" alt="Reminders window" width="400">
+<img src="https://wiki.3deathsaves.com/dont-forget/player-list-button.png" alt="Reminders button in the player list" width="261">
 
-**Right-Click Creation:** Quick reminder creation with right-click on the reminder button.
+**Private lists.** Players see only their own reminders. Completed items stay checked off until you clear them in one click.
 
-<img src="https://wiki.3deathsaves.com/dont-forget/create-reminder-dialog.png" alt="New Reminder dialog" width="400">
+<img src="https://wiki.3deathsaves.com/dont-forget/reminders-window.png" alt="Reminders window" width="499">
 
-### Also Included
+**Write it down properly.** The New Reminder dialog takes the text, an owner, and an optional due date.
 
-- **Quick Access**: Convenient reminder button in the player list for instant access
-- **Bulk Management**: Delete all completed reminders with one click
+<img src="https://wiki.3deathsaves.com/dont-forget/create-reminder-dialog.png" alt="New Reminder dialog" width="434">
+
+**In-world due dates.** With [Calendaria](https://wiki.3deathsaves.com/calendaria/) active, a reminder can fall due on a date in your campaign's calendar. Due reminders are highlighted in the list.
+
+**The GM sees everything.** Switch the window to All Users to read every reminder at the table, along with who wrote it.
+
+**API and hooks.** Other modules can create, complete, and clean up reminders.
 
 ---
 
 ## Installation
 
-Get Don't Forget! through Foundry's **Module Manager** for instant setup.
+Get Don't Forget! through Foundry's **Module Manager**.
 
 ### Manual Installation
 
@@ -47,42 +51,3 @@ Get Don't Forget! through Foundry's **Module Manager** for instant setup.
    [https://github.com/Sayshal/dont-forget/releases/latest/download/module.json](https://github.com/Sayshal/dont-forget/releases/latest/download/module.json)
 4. Click **Install**
 5. Enable Don't Forget! in the **Manage Modules** section
-
----
-
-## Usage
-
-### Quick Start
-
-- **Left-click** the reminder button (📝) in the player list to open the main reminder interface
-- **Right-click** the reminder button for instant reminder creation
-- Use checkboxes to mark reminders as completed
-- Edit or delete reminders using the action buttons
-
-### For Players
-
-- Create personal reminders for character development, session notes, or important details
-- Track completed items and clean up your list as needed
-- All your reminders stay private to you
-
-### For GMs
-
-- See all player reminders to better understand party goals and interests
-- Create reminders for NPCs, plot hooks, or session preparation
-- Monitor which players are actively using the system
-- Manage any reminder if needed for session flow
-
----
-
-## Why Don't Forget!?
-
-Don't Forget! transforms session management from scattered notes to organized, accessible reminders. Instead of:
-
-- Losing important notes on paper scraps
-- Forgetting character development ideas between sessions
-- Missing important plot points or rule clarifications
-- Struggling to track what players are thinking about
-
-You get a streamlined, integrated tool that keeps everyone organized and engaged. Whether you're a player tracking character goals or a GM managing complex storylines, Don't Forget! helps you stay focused on what matters most—great storytelling and memorable adventures!
-
----
