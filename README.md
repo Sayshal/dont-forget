@@ -11,7 +11,7 @@ Jot down plot hooks, character goals, or rules you keep meaning to look up, then
 ![GitHub Downloads (specific asset, latest release)](<https://img.shields.io/github/downloads/Sayshal/dont-forget/latest/module.zip?sort=date&style=for-the-badge&logo=foundryvirtualtabletop&logoColor=white&logoSize=auto&label=Downloads%20(Latest)&color=ff144f>)
 
 ![Foundry Version](https://img.shields.io/endpoint?url=https%3A%2F%2Ffoundryshields.com%2Fversion%3Fstyle%3Dfor-the-badge%26url%3Dhttps%3A%2F%2Fgithub.com%2FSayshal%2Fdont-forget%2Freleases%2Flatest%2Fdownload%2Fmodule.json)
-[![Discord](https://dcbadge.limes.pink/api/server/feMsefha8D)](https://discord.gg/feMsefha8D)
+[![Discord](https://dcbadge.limes.pink/api/server/feMsefha8D)](https://discord.gg/PzzUwU9gdz)
 
 **[Read the Wiki](https://wiki.3deathsaves.com/dont-forget/)** for guides, the settings reference, and the API.
 
