@@ -1,8 +1,7 @@
 ## Bug Fixes
 
-- Reminder notifications and API error messages now show the translated message instead of the raw localization key.
-- The reminder window title now updates when switching to a different player or the All Users view.
-
-## Changes
-
-- Tested in a dnd5e 6.1 world. The module does not depend on any game system.
+- In the All Users view, the clear-completed confirmation now says it deletes every user's completed reminders.
+- Moving a completed reminder to another owner keeps it completed.
+- Moving a dated reminder to another owner while due dates are switched off now creates a Calendaria note for the new owner.
+- Renaming a dated reminder while due dates are switched off now renames its Calendaria note.
+- The reminder created, completed and deleted hooks now fire for users added after the world loaded.
