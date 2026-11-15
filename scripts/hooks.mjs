@@ -72,6 +72,7 @@ export function registerHooks() {
     const app = reminderApp();
     if (app?.rendered && !app.isTyping) app.render();
   });
+  Hooks.on('createUser', seedReminderCache);
   Hooks.on('renderPlayers', (_app, html) => {
     if (!game.settings.get(MODULE.ID, MODULE.SETTINGS.INJECT_BUTTON)) return;
     html.querySelectorAll(`.${MODULE.ID}-header-button`).forEach((button) => button.remove());

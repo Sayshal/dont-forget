@@ -356,7 +356,8 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
     await ReminderManager.deleteReminder(reminder.id, reminder.userId);
     if (reminder.noteId) requestNote({ action: 'delete', noteId: reminder.noteId });
 
-    const created = await ReminderManager.createReminder(entry.ownerId, { label: entry.label, isDone: reminder.isDone, dueDate: entry.dueDate });
+    const created = await ReminderManager.createReminder(entry.ownerId, { label: entry.label, dueDate: entry.dueDate });
+    if (created && reminder.isDone) await ReminderManager.updateReminder(created.id, { isDone: true });
     if (created?.dueDate) requestNote({ action: 'create', reminderId: created.id, userId: entry.ownerId, label: created.label, dueDate: entry.dueDate });
   }
 
@@ -389,7 +390,12 @@ export class ReminderApp extends HandlebarsApplicationMixin(ApplicationV2) {
       return;
     }
 
-    const confirmed = await DialogV2.confirm({ classes: ['dont-forget'], window: { title: 'DONTFORGET.Confirm.DeleteAllTitle' }, content: _loc('DONTFORGET.Confirm.DeleteAll'), modal: true });
+    const confirmed = await DialogV2.confirm({
+      classes: ['dont-forget'],
+      window: { title: 'DONTFORGET.Confirm.DeleteAllTitle' },
+      content: _loc(this.viewingUserId ? 'DONTFORGET.Confirm.DeleteAll' : 'DONTFORGET.Confirm.DeleteAllUsers'),
+      modal: true
+    });
     if (!confirmed) return;
 
     await ReminderManager.deleteReminders(completed);
